@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_editor_form(object):
     def setupUi(self, editor_form):
         editor_form.setObjectName("editor_form")
@@ -1157,7 +1158,8 @@ class Ui_editor_form(object):
         self.verticalLayout_27.addWidget(self.label_32)
         self.alwaysCallEquity = QtWidgets.QSlider(self.groupBox_35)
         self.alwaysCallEquity.setMouseTracking(False)
-        self.alwaysCallEquity.setToolTip("<html><head/><body><p>If the equity (winning probability) is higher than the value, the bot will never fold.</p></body></html>")
+        self.alwaysCallEquity.setToolTip(
+            "<html><head/><body><p>If the equity (winning probability) is higher than the value, the bot will never fold.</p></body></html>")
         self.alwaysCallEquity.setMinimum(1)
         self.alwaysCallEquity.setMaximum(100)
         self.alwaysCallEquity.setSingleStep(5)
@@ -1886,229 +1888,336 @@ class Ui_editor_form(object):
         editor_form.setWindowTitle(_translate("editor_form", "Strategy editor"))
         self.label_4.setText(_translate("editor_form", "Strategy editor"))
         self.label_2.setText(_translate("editor_form", "New name"))
-        self.pushButton_save_new_strategy.setToolTip(_translate("editor_form", "Saves the current strategy under a new name"))
+        self.pushButton_save_new_strategy.setToolTip(
+            _translate("editor_form", "Saves the current strategy under a new name"))
         self.pushButton_save_new_strategy.setText(_translate("editor_form", "Save under new name"))
         self.label.setText(_translate("editor_form", "Select Strategy"))
         self.Strategy.setToolTip(_translate("editor_form", "Select a strategy you want to edit"))
-        self.pushButton_save_current_strategy.setToolTip(_translate("editor_form", "You can only save strategies you have created yourself. Otherwise save it under a new name."))
+        self.pushButton_save_current_strategy.setToolTip(_translate("editor_form",
+                                                                    "You can only save strategies you have created yourself. Otherwise save it under a new name."))
         self.pushButton_save_current_strategy.setText(_translate("editor_form", "Save"))
         self.groupBox_33.setTitle(_translate("editor_form", "Blinds"))
         self.label_11.setText(_translate("editor_form", "Small Blind (cents)"))
         self.label_454.setText(_translate("editor_form", "Big Blind (cents)"))
         self.groupBox_34.setTitle(_translate("editor_form", "Logging"))
         self.gather_player_names.setText(_translate("editor_form", "Gather player names"))
-        self.label_43.setText(_translate("editor_form", "Don\'t log changes in my pot if the exceed this threshold (to avoid confusing the chart if the funds are not read correctly for a round)"))
-        self.collusion.setToolTip(_translate("editor_form", "<html><head/><body><p>You can participate in collusion. This means your cards are shared with other players that are using the bot and if you happen to be on the same table both bots will know each others cards. If one of the bots drops out the remaining bot will be able to run a more accurate montecarlo simulation as he knows which 2 cards the remaining third party player does not hold for sure.</p></body></html>"))
+        self.label_43.setText(_translate("editor_form",
+                                         "Don\'t log changes in my pot if the exceed this threshold (to avoid confusing the chart if the funds are not read correctly for a round)"))
+        self.collusion.setToolTip(_translate("editor_form",
+                                             "<html><head/><body><p>You can participate in collusion. This means your cards are shared with other players that are using the bot and if you happen to be on the same table both bots will know each others cards. If one of the bots drops out the remaining bot will be able to run a more accurate montecarlo simulation as he knows which 2 cards the remaining third party player does not hold for sure.</p></body></html>"))
         self.collusion.setText(_translate("editor_form", "Participate in collusion"))
         self.label_13.setText(_translate("editor_form", "Poker Site (Party Poker or Poker Stars)"))
-        self.pokerSite.setToolTip(_translate("editor_form", "Currently Partypoker (PP) and Pokerstars (PS) are supported"))
+        self.pokerSite.setToolTip(
+            _translate("editor_form", "Currently Partypoker (PP) and Pokerstars (PS) are supported"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("editor_form", "Table Parameters"))
         self.preflop_override.setText(_translate("editor_form", "Override with Pokersnowie table"))
-        self.groupBox_28.setTitle(_translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
+        self.groupBox_28.setTitle(
+            _translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
         self.pushButton_update1.setText(_translate("editor_form", "Update Graph"))
         self.groupBox_29.setTitle(_translate("editor_form", "Calling"))
         self.label_237.setText(_translate("editor_form", "Minimum required equity"))
-        self.PreFlopMinCallEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.PreFlopMinCallEquity.setToolTip(_translate("editor_form",
+                                                        "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_15.setText(_translate("editor_form", "Curvature"))
-        self.PreFlopCallPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.PreFlopCallPower.setToolTip(_translate("editor_form",
+                                                    "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.groupBox_30.setTitle(_translate("editor_form", "Betting"))
         self.label_394.setText(_translate("editor_form", "Maximum equity to bet"))
-        self.PreFlopMaxBetEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>At the preflop stage you can set a maximum equity where the bot will bet. This is useful for tables where the players are very conservative and get scared easily. So you can avoid giving a way having good preflop cards and not bet (only call assuming you are still on the right of the blue curve). The red curve will break off at this point.</p></body></html>"))
+        self.PreFlopMaxBetEquity.setToolTip(_translate("editor_form",
+                                                       "<html><head/><body><p>At the preflop stage you can set a maximum equity where the bot will bet. This is useful for tables where the players are very conservative and get scared easily. So you can avoid giving a way having good preflop cards and not bet (only call assuming you are still on the right of the blue curve). The red curve will break off at this point.</p></body></html>"))
         self.label_16.setText(_translate("editor_form", "Minimum required equity"))
-        self.PreFlopMinBetEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.PreFlopMinBetEquity.setToolTip(_translate("editor_form",
+                                                       "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_17.setText(_translate("editor_form", "Curvature"))
-        self.PreFlopBetPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.PreFlopBetPower.setToolTip(_translate("editor_form",
+                                                   "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.groupBox_31.setTitle(_translate("editor_form", "Second round adjustments"))
         self.label_33.setText(_translate("editor_form", "Second round adjustment in equity for preflop"))
-        self.secondRoundAdjustmentPreFlop.setToolTip(_translate("editor_form", "<html><head/><body><p>If the bot has called or made a bet and then one of the following players raises, another round is played. This is called the \'second round\'. It is sometimes a sign that one of the opponents has good cards, that\'s why it\'s possible to make an adjustment and increase the minimum amount of equity that is required to call or bet, so the bot becomes more conservative.</p></body></html>"))
+        self.secondRoundAdjustmentPreFlop.setToolTip(_translate("editor_form",
+                                                                "<html><head/><body><p>If the bot has called or made a bet and then one of the following players raises, another round is played. This is called the \'second round\'. It is sometimes a sign that one of the opponents has good cards, that\'s why it\'s possible to make an adjustment and increase the minimum amount of equity that is required to call or bet, so the bot becomes more conservative.</p></body></html>"))
         self.label_451.setText(_translate("editor_form", "Second Round adjustment curvature increase (all stages)"))
-        self.secondRoundAdjustmentPowerIncrease.setToolTip(_translate("editor_form", "<html><head/><body><p>If the bot has called or made a bet and then one of the following players raises, another round is played. This is called the \'second round\'. It is sometimes a sign that one of the opponents has good cards, that\'s why it\'s possible to make an adjustment and increase the curvature of the betting and calling limit, so the bot becomes more conservative.</p></body></html>", " "))
+        self.secondRoundAdjustmentPowerIncrease.setToolTip(_translate("editor_form",
+                                                                      "<html><head/><body><p>If the bot has called or made a bet and then one of the following players raises, another round is played. This is called the \'second round\'. It is sometimes a sign that one of the opponents has good cards, that\'s why it\'s possible to make an adjustment and increase the curvature of the betting and calling limit, so the bot becomes more conservative.</p></body></html>",
+                                                                      " "))
         self.groupBox_32.setTitle(_translate("editor_form", "Adjustments for position and pot size"))
         self.label_40.setText(_translate("editor_form", "Other player call results in increased required equity"))
-        self.pre_flop_equity_increase_if_call.setToolTip(_translate("editor_form", "<html><head/><body><p>If somebody calls before it\'s the bot\'s turn to play, the minimum required equity is increased by this amound.</p></body></html>"))
+        self.pre_flop_equity_increase_if_call.setToolTip(_translate("editor_form",
+                                                                    "<html><head/><body><p>If somebody calls before it\'s the bot\'s turn to play, the minimum required equity is increased by this amound.</p></body></html>"))
         self.label_41.setText(_translate("editor_form", "Other players bet results in increase required equity"))
-        self.pre_flop_equity_increase_if_bet.setToolTip(_translate("editor_form", "<html><head/><body><p>If somebody raises before it\'s the bot\'s turn to play, the minimum required equity is increased by this amound.</p></body></html>"))
+        self.pre_flop_equity_increase_if_bet.setToolTip(_translate("editor_form",
+                                                                   "<html><head/><body><p>If somebody raises before it\'s the bot\'s turn to play, the minimum required equity is increased by this amound.</p></body></html>"))
         self.label_42.setText(_translate("editor_form", "Positional factor for equity adjustment"))
-        self.pre_flop_equity_reduction_by_position.setToolTip(_translate("editor_form", "<html><head/><body><p>The required equity chosen in the slide is for UTG. With each position that the bot is further away from UTG the required equity to call and bet is reduced by this amount</p></body></html>"))
+        self.pre_flop_equity_reduction_by_position.setToolTip(_translate("editor_form",
+                                                                         "<html><head/><body><p>The required equity chosen in the slide is for UTG. With each position that the bot is further away from UTG the required equity to call and bet is reduced by this amount</p></body></html>"))
         self.label_35.setText(_translate("editor_form", "Pot adjustment"))
-        self.potAdjustmentPreFlop.setToolTip(_translate("editor_form", "<html><head/><body><p>When there\'a s lot of money in the pot already, you can use pot adjustment so that less equity is required to call or raise. The below forumla is used to calculate how much teh equity should be adjusted. For example if the pot value is $1 and the big blind 0.04, then the minimum required equity is reduced by 10%.</p><p><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000; background-color:#ffffff;\">Adjust = -(totalPotValue / bigBlind / </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#0000ff;\">250 </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000;\">* potadjustment)</span></p></body></html>"))
+        self.potAdjustmentPreFlop.setToolTip(_translate("editor_form",
+                                                        "<html><head/><body><p>When there\'a s lot of money in the pot already, you can use pot adjustment so that less equity is required to call or raise. The below forumla is used to calculate how much teh equity should be adjusted. For example if the pot value is $1 and the big blind 0.04, then the minimum required equity is reduced by 10%.</p><p><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000; background-color:#ffffff;\">Adjust = -(totalPotValue / bigBlind / </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#0000ff;\">250 </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000;\">* potadjustment)</span></p></body></html>"))
         self.label_36.setText(_translate("editor_form", "Maximum pot adjustment"))
-        self.maxPotAdjustmentPreFlop.setToolTip(_translate("editor_form", "<html><head/><body><p>You can set an upper limit by home many percent the equity should be reduced by the pot adjustment.</p></body></html>"))
+        self.maxPotAdjustmentPreFlop.setToolTip(_translate("editor_form",
+                                                           "<html><head/><body><p>You can set an upper limit by home many percent the equity should be reduced by the pot adjustment.</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.PreFlop), _translate("editor_form", "PreFlop"))
         self.groupBox_15.setTitle(_translate("editor_form", "Calling"))
         self.label_180.setText(_translate("editor_form", "Curvature"))
-        self.FlopCallPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.FlopCallPower.setToolTip(_translate("editor_form",
+                                                 "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_179.setText(_translate("editor_form", "Minimum required equity"))
-        self.FlopMinCallEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
-        self.groupBox_19.setTitle(_translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
+        self.FlopMinCallEquity.setToolTip(_translate("editor_form",
+                                                     "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.groupBox_19.setTitle(
+            _translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
         self.pushButton_update2.setText(_translate("editor_form", "Update Graph"))
         self.groupBox_16.setTitle(_translate("editor_form", "Betting"))
         self.label_182.setText(_translate("editor_form", "Minimum required equity"))
-        self.FlopMinBetEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.FlopMinBetEquity.setToolTip(_translate("editor_form",
+                                                    "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_176.setText(_translate("editor_form", "Curvature"))
-        self.FlopBetPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.FlopBetPower.setToolTip(_translate("editor_form",
+                                                "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.groupBox_17.setTitle(_translate("editor_form", "Bluffing"))
         self.label_450.setText(_translate("editor_form", "Check deception if equity is above treshold"))
-        self.FlopCheckDeceptionMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the flop.</p></body></html>"))
+        self.FlopCheckDeceptionMinEquity.setToolTip(_translate("editor_form",
+                                                               "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the flop.</p></body></html>"))
         self.label_183.setText(_translate("editor_form", "Minimum equity required to potentially bluff"))
-        self.FlopBluffMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.FlopBluffMinEquity.setToolTip(_translate("editor_form",
+                                                      "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
         self.label_186.setText(_translate("editor_form", "Maximum equity required to potentially bluff"))
-        self.FlopBluffMaxEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.FlopBluffMaxEquity.setToolTip(_translate("editor_form",
+                                                      "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
         self.groupBox_18.setTitle(_translate("editor_form", "Postflop adjustments"))
         self.label_185.setText(_translate("editor_form", "Pot adjustment (flop turn river)"))
-        self.potAdjustment.setToolTip(_translate("editor_form", "<html><head/><body><p>When there\'a s lot of money in the pot already, you can use pot adjustment so that less equity is required to call or raise. The below forumla is used to calculate how much teh equity should be adjusted. For example if the pot value is $1 and the big blind 0.04, then the minimum required equity is reduced by 10%.</p><p><br/></p><p><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000; background-color:#ffffff;\">Adjust = -(totalPotValue / bigBlind / </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#0000ff;\">250 </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000;\">* potadjustment)</span></p><p><br/></p></body></html>"))
+        self.potAdjustment.setToolTip(_translate("editor_form",
+                                                 "<html><head/><body><p>When there\'a s lot of money in the pot already, you can use pot adjustment so that less equity is required to call or raise. The below forumla is used to calculate how much teh equity should be adjusted. For example if the pot value is $1 and the big blind 0.04, then the minimum required equity is reduced by 10%.</p><p><br/></p><p><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000; background-color:#ffffff;\">Adjust = -(totalPotValue / bigBlind / </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#0000ff;\">250 </span><span style=\" font-family:\'Courier New\'; font-size:9pt; color:#000000;\">* potadjustment)</span></p><p><br/></p></body></html>"))
         self.label_181.setText(_translate("editor_form", "Maximum pot adjustment (flop turn river)"))
-        self.maxPotAdjustment.setToolTip(_translate("editor_form", "<html><head/><body><p>You can set an upper limit by home many percent the equity should be reduced by the pot adjustment.</p></body></html>"))
+        self.maxPotAdjustment.setToolTip(_translate("editor_form",
+                                                    "<html><head/><body><p>You can set an upper limit by home many percent the equity should be reduced by the pot adjustment.</p></body></html>"))
         self.label_177.setText(_translate("editor_form", "Second round adjustment in minimum equty (flop turn river)"))
-        self.secondRoundAdjustment.setToolTip(_translate("editor_form", "<html><head/><body><p>You can adjust by home much the minimum required equity should be increased in the \'second round\', meaning if in the same game stage the bot is asked to act a second time. As this often indicates strehgth of the opponent, you can increase the required equity for the bot to call or raise with this slider.</p></body></html>"))
+        self.secondRoundAdjustment.setToolTip(_translate("editor_form",
+                                                         "<html><head/><body><p>You can adjust by home much the minimum required equity should be increased in the \'second round\', meaning if in the same game stage the bot is asked to act a second time. As this often indicates strehgth of the opponent, you can increase the required equity for the bot to call or raise with this slider.</p></body></html>"))
         self.label_178.setText(_translate("editor_form", "Probability that players ahead will call (flop only)"))
-        self.CoveredPlayersCallLikelihoodFlop.setToolTip(_translate("editor_form", "<html><head/><body><p>This has only an influence on the montecarlo simulation at the flop if there are 2 or more other players in the game and we are not the last one to act. For example If a player acted behind us and there\'s one ahead of us, if the probability is less than 50% in this switch, the monte carlo will only assume 2 players.</p></body></html>"))
+        self.CoveredPlayersCallLikelihoodFlop.setToolTip(_translate("editor_form",
+                                                                    "<html><head/><body><p>This has only an influence on the montecarlo simulation at the flop if there are 2 or more other players in the game and we are not the last one to act. For example If a player acted behind us and there\'s one ahead of us, if the probability is less than 50% in this switch, the monte carlo will only assume 2 players.</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("editor_form", "Flop"))
         self.groupBox_20.setTitle(_translate("editor_form", "Calling"))
         self.label_109.setText(_translate("editor_form", "Minimum required equity"))
-        self.TurnMinCallEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.TurnMinCallEquity.setToolTip(_translate("editor_form",
+                                                     "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_111.setText(_translate("editor_form", "Curvature"))
-        self.TurnCallPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.TurnCallPower.setToolTip(_translate("editor_form",
+                                                 "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.groupBox_21.setTitle(_translate("editor_form", "Betting"))
         self.label_114.setText(_translate("editor_form", "Minimum required equity"))
-        self.TurnMinBetEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.TurnMinBetEquity.setToolTip(_translate("editor_form",
+                                                    "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_107.setText(_translate("editor_form", "Curvature"))
-        self.TurnBetPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
-        self.groupBox_22.setTitle(_translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
+        self.TurnBetPower.setToolTip(_translate("editor_form",
+                                                "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.groupBox_22.setTitle(
+            _translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
         self.pushButton_update3.setText(_translate("editor_form", "Update Graph"))
         self.groupBox_23.setTitle(_translate("editor_form", "Bluffing"))
-        self.label_115.setText(_translate("editor_form", "Check deception if equity above threshold and previous decision was call"))
-        self.TurnCheckDeceptionMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the turn.</p><p>For the flop the additional condition that the previous decision was call needs to be met (i.e. the opponent has betting initiative).</p></body></html>"))
+        self.label_115.setText(
+            _translate("editor_form", "Check deception if equity above threshold and previous decision was call"))
+        self.TurnCheckDeceptionMinEquity.setToolTip(_translate("editor_form",
+                                                               "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the turn.</p><p>For the flop the additional condition that the previous decision was call needs to be met (i.e. the opponent has betting initiative).</p></body></html>"))
         self.label_113.setText(_translate("editor_form", "Minimum equity required to potentially bluff"))
-        self.TurnBluffMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.TurnBluffMinEquity.setToolTip(_translate("editor_form",
+                                                      "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
         self.label_116.setText(_translate("editor_form", "Maximum equity required to potentially bluff"))
-        self.TurnBluffMaxEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.TurnBluffMaxEquity.setToolTip(_translate("editor_form",
+                                                      "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.WorstGames), _translate("editor_form", "Turn"))
-        self.groupBox_24.setTitle(_translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
+        self.groupBox_24.setTitle(
+            _translate("editor_form", "Calling and betting curves: maximum sizes depending on equity"))
         self.pushButton_update4.setText(_translate("editor_form", "Update Graph"))
         self.groupBox_25.setTitle(_translate("editor_form", "Calling"))
         self.label_127.setText(_translate("editor_form", "Minimum required equity"))
-        self.RiverMinCallEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.RiverMinCallEquity.setToolTip(_translate("editor_form",
+                                                      "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_129.setText(_translate("editor_form", "Curvature"))
-        self.RiverCallPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.RiverCallPower.setToolTip(_translate("editor_form",
+                                                  "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) that is required to call the big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.groupBox_26.setTitle(_translate("editor_form", "Betting"))
         self.label_128.setText(_translate("editor_form", "Second Round Minimum equity to bet full pot"))
-        self.secondRiverBetPotMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>If the bot needs to act a second time in the river, you can set the minimum required equity to bet pot (instead of half pot).</p></body></html>"))
+        self.secondRiverBetPotMinEquity.setToolTip(_translate("editor_form",
+                                                              "<html><head/><body><p>If the bot needs to act a second time in the river, you can set the minimum required equity to bet pot (instead of half pot).</p></body></html>"))
         self.label_126.setText(_translate("editor_form", "Minimum required equity to bet full pot"))
         self.label_132.setText(_translate("editor_form", "Minimum required equity"))
-        self.RiverMinBetEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.RiverMinBetEquity.setToolTip(_translate("editor_form",
+                                                     "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_125.setText(_translate("editor_form", "Curvature"))
-        self.RiverBetPower.setToolTip(_translate("editor_form", "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
+        self.RiverBetPower.setToolTip(_translate("editor_form",
+                                                 "<html><head/><body><p>For each stage you can select:</p><p>What is the minimum required equity (probability of winning as determined by the simulation) to make a bet, if the bet value is 2*big blind. It is the starting point of the curve that you can see on the right.</p><p>How should curve be shaped that determines whether the bot should fold or call. The higher the equity the higher it will call. The higher the curvature (as can be seen in the graph on the right), the more conservative it will be on the lower ranges of the accepted equities. If the curvature is low (minimum is 2), then it almost becomes a straight line.</p></body></html>"))
         self.label_393.setText(_translate("editor_form", "Maximum amount to bet pot (as multiple of big blind)"))
-        self.betPotRiverEquityMaxBBM.setToolTip(_translate("editor_form", "<html><head/><body><p>You can set a maximum pot size where the bot will still bet pot (instead of half pot) to avoid very large bets. If the amount is exceeded the bot will bet only half pot instead.</p></body></html>"))
+        self.betPotRiverEquityMaxBBM.setToolTip(_translate("editor_form",
+                                                           "<html><head/><body><p>You can set a maximum pot size where the bot will still bet pot (instead of half pot) to avoid very large bets. If the amount is exceeded the bot will bet only half pot instead.</p></body></html>"))
         self.groupBox_27.setTitle(_translate("editor_form", "Bluffing"))
         self.label_133.setText(_translate("editor_form", "Minimum equity required to potentially bluff"))
-        self.RiverBluffMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.RiverBluffMinEquity.setToolTip(_translate("editor_form",
+                                                       "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
         self.label_134.setText(_translate("editor_form", "Maximum equity required to potentially bluff"))
-        self.RiverBluffMaxEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
-        self.label_131.setText(_translate("editor_form", "Check deception if equity above threshold and previous decision was call"))
-        self.RiverCheckDeceptionMinEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the turn.</p><p>For the flop and river the additional condition that the previous decision was call needs to be met (i.e. the opponent has betting initiative).</p></body></html>"))
+        self.RiverBluffMaxEquity.setToolTip(_translate("editor_form",
+                                                       "<html><head/><body><p>Minimum equity required to potentially bluff if conditions in the conditions tab are met.</p></body></html>"))
+        self.label_131.setText(
+            _translate("editor_form", "Check deception if equity above threshold and previous decision was call"))
+        self.RiverCheckDeceptionMinEquity.setToolTip(_translate("editor_form",
+                                                                "<html><head/><body><p>If the equity is very high, you may not want to be aggresssive at the flop stage already. That\'s why you may simply want to check or call, instead of making a big bet. For example if you suddenly have a 90% equity, you can set the limit here above which amount of equity you want to do a \'check deception\' at the turn.</p><p>For the flop and river the additional condition that the previous decision was call needs to be met (i.e. the opponent has betting initiative).</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("editor_form", "River"))
         self.groupBox_35.setTitle(_translate("editor_form", "Extreme cases"))
-        self.label_37.setText(_translate("editor_form", "Maximum to call at 100% equity (effects how high the bot calls)"))
-        self.initialFunds.setToolTip(_translate("editor_form", "<html><head/><body><p>When equity is 100% then this is the maximum amount whre the bot will call. In the graph it corresponds to the upper right corner where equity is 100%. I suggest you put slightly more than your initial funds. .</p><p>If you choose multiple of pot size in the select box, you can select, if you put the slider to 1000 it means that a maximum of 10x pot will be called.</p></body></html>"))
+        self.label_37.setText(
+            _translate("editor_form", "Maximum to call at 100% equity (effects how high the bot calls)"))
+        self.initialFunds.setToolTip(_translate("editor_form",
+                                                "<html><head/><body><p>When equity is 100% then this is the maximum amount whre the bot will call. In the graph it corresponds to the upper right corner where equity is 100%. I suggest you put slightly more than your initial funds. .</p><p>If you choose multiple of pot size in the select box, you can select, if you put the slider to 1000 it means that a maximum of 10x pot will be called.</p></body></html>"))
         self.label_3.setText(_translate("editor_form", "Maximum to bet at 100% equity (has effect on reraise)"))
-        self.initialFunds2.setToolTip(_translate("editor_form", "<html><head/><body><p>When equity is 100% then this is the maximum amount whre the bot will bet. In the graph it corresponds to the upper right corner where equity is 100%. I suggest you put slightly more than your initial funds. .</p><p>If you choose multiple of pot size in the select box, you can select, if you put the slider to 1000 it means that a maximum of 10x pot will be raised.</p></body></html>"))
-        self.label_44.setText(_translate("editor_form", "Always call if pot size is more than x times than bot stack size"))
-        self.always_call_low_stack_multiplier.setToolTip(_translate("editor_form", "If the bot stack size is below a certain amount, the bot will always call. The slider controls the multiplier. 10 means that he will always call when the stack is less than 1 if the pot is 10"))
-        self.use_pot_multiples.setToolTip(_translate("editor_form", "<html><head/><body><p>This option has influence on a lot of things. The curves will no longer depend on the total amount of that call and bet button, but will instead be dependent on the highest bidder as a percentage of the pot.</p></body></html>"))
-        self.use_pot_multiples.setText(_translate("editor_form", "Use multiples of pot sizes instead of absolute $ values. If multipler is selected: for maximum of 1x pot select 100"))
+        self.initialFunds2.setToolTip(_translate("editor_form",
+                                                 "<html><head/><body><p>When equity is 100% then this is the maximum amount whre the bot will bet. In the graph it corresponds to the upper right corner where equity is 100%. I suggest you put slightly more than your initial funds. .</p><p>If you choose multiple of pot size in the select box, you can select, if you put the slider to 1000 it means that a maximum of 10x pot will be raised.</p></body></html>"))
+        self.label_44.setText(
+            _translate("editor_form", "Always call if pot size is more than x times than bot stack size"))
+        self.always_call_low_stack_multiplier.setToolTip(_translate("editor_form",
+                                                                    "If the bot stack size is below a certain amount, the bot will always call. The slider controls the multiplier. 10 means that he will always call when the stack is less than 1 if the pot is 10"))
+        self.use_pot_multiples.setToolTip(_translate("editor_form",
+                                                     "<html><head/><body><p>This option has influence on a lot of things. The curves will no longer depend on the total amount of that call and bet button, but will instead be dependent on the highest bidder as a percentage of the pot.</p></body></html>"))
+        self.use_pot_multiples.setText(_translate("editor_form",
+                                                  "Use multiples of pot sizes instead of absolute $ values. If multipler is selected: for maximum of 1x pot select 100"))
         self.label_32.setText(_translate("editor_form", "Equity threshold above which everything is called"))
         self.groupBox_37.setTitle(_translate("editor_form", "Self improvement with genetic algorithm"))
         self.label_449.setText(_translate("editor_form", "Minimum loss to initiate Genetic Algorithm"))
         self.label_452.setText(_translate("editor_form", "Considering the last # of games for genetic algorithm"))
-        self.considerLastGames.setToolTip(_translate("editor_form", "<html><head/><body><p>The genetic algorithm can be activated automatically. Here you can select under what conditions this will happen. It only makes sens to have it activated after playing at least 500 hands.</p></body></html>"))
+        self.considerLastGames.setToolTip(_translate("editor_form",
+                                                     "<html><head/><body><p>The genetic algorithm can be activated automatically. Here you can select under what conditions this will happen. It only makes sens to have it activated after playing at least 500 hands.</p></body></html>"))
         self.label_453.setText(_translate("editor_form", "Initiate self improvement ever x hands"))
-        self.groupBox_36.setTitle(_translate("editor_form", "Bullying other players with little fund with aggressive behaviour and behaviour with low funds"))
+        self.groupBox_36.setTitle(_translate("editor_form",
+                                             "Bullying other players with little fund with aggressive behaviour and behaviour with low funds"))
         self.label_39.setText(_translate("editor_form", "Maximum equity to bully"))
-        self.maxBullyEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>Upper limit of equity where bully mode can be activated if all conditions are met.</p></body></html>"))
+        self.maxBullyEquity.setToolTip(_translate("editor_form",
+                                                  "<html><head/><body><p>Upper limit of equity where bully mode can be activated if all conditions are met.</p></body></html>"))
         self.label_38.setText(_translate("editor_form", "Minimum required equity to bully"))
-        self.minBullyEquity.setToolTip(_translate("editor_form", "<html><head/><body><p>In order activate bully mode (meaning the bot is more aggressive), a minimum amounf of equity (winning probability as determined by the simulation) can be selected.</p></body></html>"))
+        self.minBullyEquity.setToolTip(_translate("editor_form",
+                                                  "<html><head/><body><p>In order activate bully mode (meaning the bot is more aggressive), a minimum amounf of equity (winning probability as determined by the simulation) can be selected.</p></body></html>"))
         self.checkBox_2.setText(_translate("editor_form", "Gather player stack sizes and activate bullying"))
-        self.label_12.setText(_translate("editor_form", "Bullying when heads up opponent stacks are below value, original funds divided by:"))
-        self.bullyDivider.setToolTip(_translate("editor_form", "<html><head/><body><p>In headsup when the single opponent has less than a certain amount of stacks left, the bot can be more agressive. This is activated when he has less funds than initial funds divided by the divider (which is this slide). For example for initial funds of $2 and a divider of 4, the bot would become more agressive if the opponent has less than $0.50.</p></body></html>"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.additionaloptions), _translate("editor_form", "Additional options"))
+        self.label_12.setText(_translate("editor_form",
+                                         "Bullying when heads up opponent stacks are below value, original funds divided by:"))
+        self.bullyDivider.setToolTip(_translate("editor_form",
+                                                "<html><head/><body><p>In headsup when the single opponent has less than a certain amount of stacks left, the bot can be more agressive. This is activated when he has less funds than initial funds divided by the divider (which is this slide). For example for initial funds of $2 and a divider of 4, the bot would become more agressive if the opponent has less than $0.50.</p></body></html>"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.additionaloptions),
+                                  _translate("editor_form", "Additional options"))
         self.groupBox_14.setTitle(_translate("editor_form", "Betting sizes"))
-        self.label_21.setText(_translate("editor_form", "Minimum bet of: 1(bet), 2(betplus), 3(bet half pot), 4(bet pot)"))
-        self.minimum_bet_size.setToolTip(_translate("editor_form", "<html><head/><body><p>This impacts the amount the bot will bet after the flop. You can set it to 3 if you only want it to bet at least half a pot, even though he would bet only bet or betPlus</p></body></html>"))
-        self.label_20.setText(_translate("editor_form", "Bet Plus: how many times the + is pressed to increase the bet"))
-        self.BetPlusInc.setToolTip(_translate("editor_form", "<html><head/><body><p>When the bot decides a simple press on the bet button is not enough, it can do a \'betPlus\'. That means it will shift the slider to the right with x clicks and then only press the bet button. Here you can adjust how many times it should click to slide the slider to the right to increase the bet size.</p></body></html>"))
-        self.label_24.setText(_translate("editor_form", "Reduce required miminum equity for call and bet per 1 out at Flop and Turn"))
-        self.out_multiplier.setToolTip(_translate("editor_form", "<html><head/><body><p>When the bot decides a simple press on the bet button is not enough, it can do a \'betPlus\'. That means it will shift the slider to the right with x clicks and then only press the bet button. Here you can adjust how many times it should click to slide the slider to the right to increase the bet size.</p></body></html>"))
+        self.label_21.setText(
+            _translate("editor_form", "Minimum bet of: 1(bet), 2(betplus), 3(bet half pot), 4(bet pot)"))
+        self.minimum_bet_size.setToolTip(_translate("editor_form",
+                                                    "<html><head/><body><p>This impacts the amount the bot will bet after the flop. You can set it to 3 if you only want it to bet at least half a pot, even though he would bet only bet or betPlus</p></body></html>"))
+        self.label_20.setText(
+            _translate("editor_form", "Bet Plus: how many times the + is pressed to increase the bet"))
+        self.BetPlusInc.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>When the bot decides a simple press on the bet button is not enough, it can do a \'betPlus\'. That means it will shift the slider to the right with x clicks and then only press the bet button. Here you can adjust how many times it should click to slide the slider to the right to increase the bet size.</p></body></html>"))
+        self.label_24.setText(
+            _translate("editor_form", "Reduce required miminum equity for call and bet per 1 out at Flop and Turn"))
+        self.out_multiplier.setToolTip(_translate("editor_form",
+                                                  "<html><head/><body><p>When the bot decides a simple press on the bet button is not enough, it can do a \'betPlus\'. That means it will shift the slider to the right with x clicks and then only press the bet button. Here you can adjust how many times it should click to slide the slider to the right to increase the bet size.</p></body></html>"))
         self.groupBox_13.setTitle(_translate("editor_form", "Postflop ranges for players"))
-        self.checkBox.setText(_translate("editor_form", "Use preflop reverse tables on heads-up if preflop tables are activated"))
+        self.checkBox.setText(
+            _translate("editor_form", "Use preflop reverse tables on heads-up if preflop tables are activated"))
         self.label_28.setText(_translate("editor_form", "Assumed postfop Range for UTG+1 player"))
-        self.range_utg1.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.range_utg1.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
         self.label_55.setText(_translate("editor_form", "Assumed postfop Range for UTG+4 player"))
-        self.range_utg4.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.range_utg4.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
         self.label_26.setText(_translate("editor_form", "Assumed postfop Range for UTG+2 player"))
-        self.range_utg2.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.range_utg2.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
         self.label_22.setText(_translate("editor_form", "Assumed postfop Range for UTG player"))
-        self.range_utg0.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.range_utg0.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
         self.label_54.setText(_translate("editor_form", "Assumed postfop Range for UTG+3 player"))
-        self.range_utg3.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.range_utg3.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
         self.label_83.setText(_translate("editor_form", "Assumed range for other players if more than 1 other player"))
-        self.range_multiple_players.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the playesr are assumed to hold. 100% means they can hold any cards. </p></body></html>"))
+        self.range_multiple_players.setToolTip(_translate("editor_form",
+                                                          "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the playesr are assumed to hold. 100% means they can hold any cards. </p></body></html>"))
         self.label_56.setText(_translate("editor_form", "Assumed postfop Range for UTG+5 player"))
-        self.range_utg5.setToolTip(_translate("editor_form", "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
-        self.differentiate_reverse_sheet.setText(_translate("editor_form", "Differentiate between call and raise in the reverse sheet"))
-        self.use_relative_equity.setToolTip(_translate("editor_form", "WIll use the equity of the preflop range divide by the actual equity as basis for decision"))
-        self.use_relative_equity.setText(_translate("editor_form", "Use relative equity to make decision instead of absolute equity"))
+        self.range_utg5.setToolTip(_translate("editor_form",
+                                              "<html><head/><body><p>For the calculation of the equity after the flop, the other players are given ranges. Here you can adjust the top% of preflop equity cards that the player is assumed to hold. 100% means he can hold any cards. </p></body></html>"))
+        self.differentiate_reverse_sheet.setText(
+            _translate("editor_form", "Differentiate between call and raise in the reverse sheet"))
+        self.use_relative_equity.setToolTip(_translate("editor_form",
+                                                       "WIll use the equity of the preflop range divide by the actual equity as basis for decision"))
+        self.use_relative_equity.setText(
+            _translate("editor_form", "Use relative equity to make decision instead of absolute equity"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("editor_form", "Betting and Ranges"))
         self.groupBox_2.setTitle(_translate("editor_form", "Turn betting"))
-        self.flop_bet_condition_42.setText(_translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
-        self.flop_bet_condition_48.setText(_translate("editor_form", "The required raise is to the right of the red betting curve"))
-        self.turn_betting_condidion_1.setToolTip(_translate("editor_form", "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
-        self.turn_betting_condidion_1.setText(_translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
+        self.flop_bet_condition_42.setText(
+            _translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
+        self.flop_bet_condition_48.setText(
+            _translate("editor_form", "The required raise is to the right of the red betting curve"))
+        self.turn_betting_condidion_1.setToolTip(_translate("editor_form",
+                                                            "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
+        self.turn_betting_condidion_1.setText(
+            _translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
         self.groupBox.setTitle(_translate("editor_form", "Flop betting"))
-        self.flop_bet_condition_41.setText(_translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
-        self.flop_bet_condition_47.setText(_translate("editor_form", "The required raise is to the right of the red betting curve"))
-        self.flop_betting_condidion_1.setToolTip(_translate("editor_form", "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
-        self.flop_betting_condidion_1.setText(_translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
+        self.flop_bet_condition_41.setText(
+            _translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
+        self.flop_bet_condition_47.setText(
+            _translate("editor_form", "The required raise is to the right of the red betting curve"))
+        self.flop_betting_condidion_1.setToolTip(_translate("editor_form",
+                                                            "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
+        self.flop_betting_condidion_1.setText(
+            _translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
         self.groupBox_11.setTitle(_translate("editor_form", "Turn bluffing"))
         self.flop_bet_condition_33.setText(_translate("editor_form", "There is a check button"))
         self.flop_bet_condition_45.setText(_translate("editor_form", "HeadsUp (only 1 opponent remains in the game)"))
-        self.flop_bet_condition_39.setText(_translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
+        self.flop_bet_condition_39.setText(
+            _translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
         self.flop_bet_condition_50.setText(_translate("editor_form", "Only bluff in first round of the current stage"))
-        self.turn_bluffing_condidion_1.setText(_translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
-        self.turn_bluffing_condidion_2.setToolTip(_translate("editor_form", "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
+        self.turn_bluffing_condidion_1.setText(
+            _translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
+        self.turn_bluffing_condidion_2.setToolTip(_translate("editor_form",
+                                                             "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
         self.turn_bluffing_condidion_2.setText(_translate("editor_form", "Don\'t bluff if other player has initiative"))
-        self.opponent_raised_without_initiative_turn.setText(_translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
+        self.opponent_raised_without_initiative_turn.setText(
+            _translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
         self.groupBox_10.setTitle(_translate("editor_form", "Flop bluffing"))
         self.flop_bet_condition_16.setText(_translate("editor_form", "There is a check button"))
         self.flop_bet_condition_44.setText(_translate("editor_form", "HeadsUp (only 1 opponent remains in the game)"))
-        self.flop_bet_condition_38.setText(_translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
+        self.flop_bet_condition_38.setText(
+            _translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
         self.flop_bet_condition_51.setText(_translate("editor_form", "Only bluff in first round of the current stage"))
-        self.flop_bluffing_condidion_1.setText(_translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
-        self.opponent_raised_without_initiative_flop.setText(_translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
+        self.flop_bluffing_condidion_1.setText(
+            _translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
+        self.opponent_raised_without_initiative_flop.setText(
+            _translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
         self.groupBox_3.setTitle(_translate("editor_form", "River betting"))
-        self.flop_bet_condition_43.setText(_translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
-        self.flop_bet_condition_49.setText(_translate("editor_form", "The required raise is to the right of the red betting curve"))
-        self.river_betting_condidion_1.setToolTip(_translate("editor_form", "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
-        self.river_betting_condidion_1.setText(_translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
+        self.flop_bet_condition_43.setText(
+            _translate("editor_form", "Equity is higher than minimum bet equity for that stage"))
+        self.flop_bet_condition_49.setText(
+            _translate("editor_form", "The required raise is to the right of the red betting curve"))
+        self.river_betting_condidion_1.setToolTip(_translate("editor_form",
+                                                             "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
+        self.river_betting_condidion_1.setText(
+            _translate("editor_form", "Don\'t bet if other player has initiative unless no check button"))
         self.groupBox_12.setTitle(_translate("editor_form", "River bluffing"))
         self.flop_bet_condition_34.setText(_translate("editor_form", "There is a check button"))
         self.flop_bet_condition_46.setText(_translate("editor_form", "HeadsUp (only 1 opponent remains in the game)"))
-        self.flop_bet_condition_40.setText(_translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
+        self.flop_bet_condition_40.setText(
+            _translate("editor_form", "Equity is higher than minimum bluff equity for that stage"))
         self.flop_bet_condition_52.setText(_translate("editor_form", "Only bluff in first round of the current stage"))
-        self.river_bluffing_condidion_1.setText(_translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
-        self.river_bluffing_condidion_2.setToolTip(_translate("editor_form", "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
-        self.river_bluffing_condidion_2.setText(_translate("editor_form", "Don\'t bluff if other player has initiative"))
-        self.opponent_raised_without_initiative_river.setText(_translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Conditions), _translate("editor_form", "Bet and Bluff conditions"))
+        self.river_bluffing_condidion_1.setText(
+            _translate("editor_form", "Only bluff if no players are ahead in this round (in position)"))
+        self.river_bluffing_condidion_2.setToolTip(_translate("editor_form",
+                                                              "<html><head/><body><p>Other player has initiative when the following conditions are met:</p><p>- we called in the last round</p><p>- we are not the last player in this round if there\'s a check button</p></body></html>"))
+        self.river_bluffing_condidion_2.setText(
+            _translate("editor_form", "Don\'t bluff if other player has initiative"))
+        self.opponent_raised_without_initiative_river.setText(
+            _translate("editor_form", "Add 10% to required equity if opponent raised without initiative"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Conditions),
+                                  _translate("editor_form", "Bet and Bluff conditions"))
 
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     editor_form = QtWidgets.QWidget()
     ui = Ui_editor_form()
     ui.setupUi(editor_form)
     editor_form.show()
     sys.exit(app.exec_())
-

@@ -6,7 +6,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+
 
 class Ui_setup_form(object):
     def setupUi(self, setup_form):
@@ -17,14 +18,16 @@ class Ui_setup_form(object):
         setup_form.setToolTip("")
         self.comboBox_vm = QtWidgets.QComboBox(setup_form)
         self.comboBox_vm.setGeometry(QtCore.QRect(10, 50, 221, 21))
-        self.comboBox_vm.setToolTip("<html><head/><body><p>Choose if you want to have direct access to VirtualBox via API or whether the bot should simply move the mouse.</p><p>The dropdown will automatically show all available virtualbox virtualmachines.</p></body></html>")
+        self.comboBox_vm.setToolTip(
+            "<html><head/><body><p>Choose if you want to have direct access to VirtualBox via API or whether the bot should simply move the mouse.</p><p>The dropdown will automatically show all available virtualbox virtualmachines.</p></body></html>")
         self.comboBox_vm.setStatusTip("Statustip")
         self.comboBox_vm.setAccessibleName("")
         self.comboBox_vm.setAccessibleDescription("")
         self.comboBox_vm.setObjectName("comboBox_vm")
         self.comboBox_2 = QtWidgets.QComboBox(setup_form)
         self.comboBox_2.setGeometry(QtCore.QRect(10, 150, 221, 21))
-        self.comboBox_2.setToolTip("Shows after how many seconds of discovering the buttons a timeout will be triggered, assuming you have reached the montecarlo simulation by then. ")
+        self.comboBox_2.setToolTip(
+            "Shows after how many seconds of discovering the buttons a timeout will be triggered, assuming you have reached the montecarlo simulation by then. ")
         self.comboBox_2.setObjectName("comboBox_2")
         self.label = QtWidgets.QLabel(setup_form)
         self.label.setGeometry(QtCore.QRect(10, 30, 211, 16))
@@ -61,10 +64,10 @@ class Ui_setup_form(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     setup_form = QtWidgets.QWidget()
     ui = Ui_setup_form()
     ui.setupUi(setup_form)
     setup_form.show()
     sys.exit(app.exec_())
-

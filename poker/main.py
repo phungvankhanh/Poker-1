@@ -1,10 +1,10 @@
-import matplotlib
-import pandas as pd
 import time
+
+import matplotlib
 import numpy as np
+import pandas as pd
 
 matplotlib.use('Qt5Agg')
-import os
 # os.environ['KERAS_BACKEND']='theano'
 import logging.handlers
 import pytesseract
@@ -23,10 +23,7 @@ from poker.decisionmaker.montecarlo_python import run_montecarlo_wrapper
 from poker.decisionmaker.decisionmaker import Decision
 from poker.tools.mouse_mover import MouseMoverTableBased
 
-
 version = 3.05
-
-
 
 
 class ThreadManager(threading.Thread):
@@ -59,17 +56,17 @@ class ThreadManager(threading.Thread):
         if range == '1': range = 'All cards'
 
         if t.gameStage != 'PreFlop' and p.selected_strategy['preflop_override']:
-            sheet_name=preflop_state.preflop_sheet_name
+            sheet_name = preflop_state.preflop_sheet_name
 
         gui_signals.signal_label_number_update.emit('equity', str(np.round(t.abs_equity * 100, 2)) + "%")
-        gui_signals.signal_label_number_update.emit('required_minbet', str(np.round(t.minBet,2)))
-        gui_signals.signal_label_number_update.emit('required_mincall', str(np.round(t.minCall,2)))
+        gui_signals.signal_label_number_update.emit('required_minbet', str(np.round(t.minBet, 2)))
+        gui_signals.signal_label_number_update.emit('required_mincall', str(np.round(t.minCall, 2)))
         # gui_signals.signal_lcd_number_update.emit('potsize', t.totalPotValue)
         gui_signals.signal_label_number_update.emit('gamenumber',
                                                     str(int(self.game_logger.get_game_count(p.current_strategy))))
         gui_signals.signal_label_number_update.emit('assumed_players', str(int(t.assumedPlayers)))
-        gui_signals.signal_label_number_update.emit('calllimit', str(np.round(d.finalCallLimit,2)))
-        gui_signals.signal_label_number_update.emit('betlimit', str(np.round(d.finalBetLimit,2)))
+        gui_signals.signal_label_number_update.emit('calllimit', str(np.round(d.finalCallLimit, 2)))
+        gui_signals.signal_label_number_update.emit('betlimit', str(np.round(d.finalBetLimit, 2)))
         gui_signals.signal_label_number_update.emit('runs', str(int(m.runs)))
         gui_signals.signal_label_number_update.emit('sheetname', sheet_name)
         gui_signals.signal_label_number_update.emit('collusion_cards', str(m.collusion_cards))
@@ -80,17 +77,16 @@ class ThreadManager(threading.Thread):
         gui_signals.signal_label_number_update.emit('minbetequity', str(np.round(t.minEquityBet, 2) * 100) + "%")
         gui_signals.signal_label_number_update.emit('outs', str(d.outs))
         gui_signals.signal_label_number_update.emit('initiative', str(t.other_player_has_initiative))
-        gui_signals.signal_label_number_update.emit('round_pot', str(np.round(t.round_pot_value,2)))
-        gui_signals.signal_label_number_update.emit('pot_multiple', str(np.round(d.pot_multiple,2)))
+        gui_signals.signal_label_number_update.emit('round_pot', str(np.round(t.round_pot_value, 2)))
+        gui_signals.signal_label_number_update.emit('pot_multiple', str(np.round(d.pot_multiple, 2)))
 
         if t.gameStage != 'PreFlop' and p.selected_strategy['use_relative_equity']:
-            gui_signals.signal_label_number_update.emit('relative_equity', str(np.round(t.relative_equity,2) * 100) + "%")
-            gui_signals.signal_label_number_update.emit('range_equity', str(np.round(t.range_equity,2) * 100) + "%")
+            gui_signals.signal_label_number_update.emit('relative_equity',
+                                                        str(np.round(t.relative_equity, 2) * 100) + "%")
+            gui_signals.signal_label_number_update.emit('range_equity', str(np.round(t.range_equity, 2) * 100) + "%")
         else:
             gui_signals.signal_label_number_update.emit('relative_equity', "")
             gui_signals.signal_label_number_update.emit('range_equity', "")
-
-
 
         # gui_signals.signal_lcd_number_update.emit('zero_ev', round(d.maxCallEV, 2))
 
@@ -102,7 +98,7 @@ class ThreadManager(threading.Thread):
 
         gui_signals.signal_curve_chart_update2.emit(t.power1, t.power2, t.minEquityCall, t.minEquityBet,
                                                     t.smallBlind, t.bigBlind,
-                                                    t.maxValue_call,t.maxValue_bet,
+                                                    t.maxValue_call, t.maxValue_bet,
                                                     t.maxEquityCall, t.max_X, t.maxEquityBet)
 
     def run(self):
@@ -209,7 +205,7 @@ class ThreadManager(threading.Thread):
                 h.first_caller = t.first_caller
                 h.previous_decision = d.decision
                 h.lastRoundGameID = h.GameID
-                h.previous_round_pot_value=t.round_pot_value
+                h.previous_round_pot_value = t.round_pot_value
                 h.last_round_bluff = False if t.currentBluff == 0 else True
                 if t.gameStage == 'PreFlop':
                     preflop_state.update_values(t, d.decision, h, d)
@@ -246,7 +242,6 @@ def run_poker():
     u = UpdateChecker()
     u.check_update(version)
 
-
     def exception_hook(exctype, value, traceback):
         # Print the error and traceback
         logger = logging.getLogger('main')
@@ -258,7 +253,6 @@ def run_poker():
         # Call the normal Exception hook after
         sys.__excepthook__(exctype, value, traceback)
         sys.exit(1)
-
 
     # Set the exception hook to our wrapping function
     sys.__excepthook__ = exception_hook
@@ -277,7 +271,7 @@ def run_poker():
     MainWindow = QtWidgets.QMainWindow()
 
     global ui
-    ui= Ui_Pokerbot()
+    ui = Ui_Pokerbot()
     ui.setupUi(MainWindow)
     MainWindow.setWindowIcon(QtGui.QIcon('icon.ico'))
 
@@ -294,8 +288,8 @@ def run_poker():
         print("Preparing to exit...")
         gui_signals.exit_thread = True
 
-
     pass
+
 
 if __name__ == '__main__':
     run_poker()

@@ -1,17 +1,17 @@
-import os
-import keras
 import json
-import numpy as np
-import sys
+import os
 import shutil
+import sys
 
+import keras
+import numpy as np
 from PIL import Image
 from keras.callbacks import TensorBoard
 from keras.constraints import maxnorm
-from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-from keras.models import Sequential, model_from_json
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Activation, Dropout, Flatten, Dense
+from keras.layers import Dropout, Flatten, Dense
+from keras.models import Sequential, model_from_json
+from keras.preprocessing.image import ImageDataGenerator, load_img
 from scipy import misc
 
 if getattr(sys, 'frozen', False):
@@ -62,7 +62,7 @@ class CardNeuralNetwork():
                 (base_dir + r'/pics/SN/', r'/card_training/'),
                 (base_dir + r'/pics/PS/', r'/card_training/'),
                 (base_dir + r'/pics/PS/', r'/card_testing/'),
-                             (r'tests/', r'/card_testing/')]
+                (r'tests/', r'/card_testing/')]
 
         for d in dirs:
             source_folder = d[0]
@@ -218,13 +218,13 @@ class CardNeuralNetwork():
 
     def load_model(self):
         # load json and create model
-        json_file = open(dir_path+'/model.json', 'r')
+        json_file = open(dir_path + '/model.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         self.loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
-        self.loaded_model.load_weights(dir_path+"/model.h5")
-        with open(dir_path+"/model_classes.json") as json_file:
+        self.loaded_model.load_weights(dir_path + "/model.h5")
+        with open(dir_path + "/model_classes.json") as json_file:
             self.class_mapping = json.load(json_file)
 
     def recognize_card(self, file):

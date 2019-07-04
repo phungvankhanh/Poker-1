@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Pokerbot(object):
     def setupUi(self, Pokerbot):
         Pokerbot.setObjectName("Pokerbot")
@@ -456,19 +457,24 @@ class Ui_Pokerbot(object):
         self.label_11.setText(_translate("Pokerbot", "DeepMind PokerBot"))
         self.button_resume.setText(_translate("Pokerbot", "Start"))
         self.button_pause.setText(_translate("Pokerbot", "Stop"))
-        self.button_log_analyser.setToolTip(_translate("Pokerbot", "Analyse past hands that the bot has played so you can improve the strategies"))
+        self.button_log_analyser.setToolTip(
+            _translate("Pokerbot", "Analyse past hands that the bot has played so you can improve the strategies"))
         self.button_log_analyser.setText(_translate("Pokerbot", "Strategy Analyser"))
-        self.button_strategy_editor.setToolTip(_translate("Pokerbot", "Here you can edit strategies and adjust the bot to your needs"))
+        self.button_strategy_editor.setToolTip(
+            _translate("Pokerbot", "Here you can edit strategies and adjust the bot to your needs"))
         self.button_strategy_editor.setText(_translate("Pokerbot", "Strategy Editor"))
-        self.button_genetic_algorithm.setToolTip(_translate("Pokerbot", "<html><head/><body><p>An automatic algorithm that suggests what you need to change. It shows you at each stage whether you need to be more or less aggressive in calling, betting, bluffing etc.</p></body></html>"))
+        self.button_genetic_algorithm.setToolTip(_translate("Pokerbot",
+                                                            "<html><head/><body><p>An automatic algorithm that suggests what you need to change. It shows you at each stage whether you need to be more or less aggressive in calling, betting, bluffing etc.</p></body></html>"))
         self.button_genetic_algorithm.setText(_translate("Pokerbot", "Genetic Algorithm"))
-        self.pushButton_setup.setToolTip(_translate("Pokerbot", "<html><head/><body><p>Setup which virtual machine the bot should access. You need to install Virtualbox to use this function (available for free). The pokerstars software will then run in the virtualbox and the pokerbot needs to run outside of the virtualbox.</p></body></html>"))
+        self.pushButton_setup.setToolTip(_translate("Pokerbot",
+                                                    "<html><head/><body><p>Setup which virtual machine the bot should access. You need to install Virtualbox to use this function (available for free). The pokerstars software will then run in the virtualbox and the pokerbot needs to run outside of the virtualbox.</p></body></html>"))
         self.pushButton_setup.setText(_translate("Pokerbot", "Setup"))
         self.pushButton_help.setText(_translate("Pokerbot", "Help"))
         self.last_decision.setToolTip(_translate("Pokerbot", "Last made decision by the bot"))
         self.last_decision.setText(_translate("Pokerbot", "Last Decision"))
         self.progress_bar.setToolTip(_translate("Pokerbot", "Shows progress when the buttons appear"))
-        self.comboBox_current_strategy.setToolTip(_translate("Pokerbot", "Choose the strategy that the bot should use to play"))
+        self.comboBox_current_strategy.setToolTip(
+            _translate("Pokerbot", "Choose the strategy that the bot should use to play"))
         self.status.setText(_translate("Pokerbot", "I\'m ready!"))
         self.label_10.setText(_translate("Pokerbot", "BB wins per 100 hands"))
         self.label_6.setText(_translate("Pokerbot", "Assumed players"))
@@ -496,10 +502,10 @@ class Ui_Pokerbot(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     Pokerbot = QtWidgets.QMainWindow()
     ui = Ui_Pokerbot()
     ui.setupUi(Pokerbot)
     Pokerbot.show()
     sys.exit(app.exec_())
-

@@ -76,7 +76,7 @@ class StrategyHandler(object):
 
     def check_defaults(self):
         if not 'initialFunds2' in self.selected_strategy: self.selected_strategy['initialFunds2'] = \
-        self.selected_strategy['initialFunds']
+            self.selected_strategy['initialFunds']
         if not 'use_relative_equity' in self.selected_strategy: self.selected_strategy['use_relative_equity'] = 0
         if not 'use_pot_multiples' in self.selected_strategy: self.selected_strategy['use_pot_multiples'] = 0
         if not 'opponent_raised_without_initiative_flop' in self.selected_strategy: self.selected_strategy[
@@ -135,8 +135,8 @@ class StrategyHandler(object):
         if not 'minimum_bet_size' in self.selected_strategy: self.selected_strategy['minimum_bet_size'] = 3
 
     def read_strategy(self, strategy_override=''):
-        config = ConfigObj("config.ini")
-        last_strategy = (config['last_strategy'])
+        config = ConfigObj(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.ini"))
+        last_strategy = config['last_strategy']
         self.current_strategy = last_strategy if strategy_override == '' else strategy_override
         try:
             cursor = self.mongodb.strategies.find({'Strategy': self.current_strategy})

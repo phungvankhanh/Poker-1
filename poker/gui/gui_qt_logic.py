@@ -13,7 +13,6 @@ from poker.gui.setup import *
 from poker.gui.help import *
 from poker.tools.vbox_manager import VirtualBoxController
 from PyQt5.QtWidgets import QMessageBox
-from poker.tools.mongo_manager import GameLogger,StrategyHandler
 import webbrowser
 from poker.decisionmaker.genetic_algorithm import *
 from poker.decisionmaker.curvefitting import *
@@ -60,7 +59,8 @@ class UIActionAndSignals(QObject):
     signal_funds_chart_update = QtCore.pyqtSignal(object)
     signal_pie_chart_update = QtCore.pyqtSignal(dict)
     signal_curve_chart_update1 = QtCore.pyqtSignal(float, float, float, float, float, float, str, str)
-    signal_curve_chart_update2 = QtCore.pyqtSignal(float, float, float, float, float, float, float, float, float, float, float)
+    signal_curve_chart_update2 = QtCore.pyqtSignal(float, float, float, float, float, float, float, float, float, float,
+                                                   float)
     signal_lcd_number_update = QtCore.pyqtSignal(str, float)
     signal_label_number_update = QtCore.pyqtSignal(str, str)
     signal_update_selected_strategy = QtCore.pyqtSignal(str)
@@ -327,7 +327,7 @@ class UIActionAndSignals(QObject):
 
     def open_help(self, p, l):
         url = "https://github.com/dickreuter/Poker/wiki/Frequently-asked-questions"
-        webbrowser.open(url,new=2)
+        webbrowser.open(url, new=2)
         # self.help_form = QtWidgets.QWidget()
         # self.ui_help = Ui_help_form()
         # self.ui_help.setupUi(self.help_form)
@@ -348,7 +348,7 @@ class UIActionAndSignals(QObject):
             pass  # no virtual machine
 
         self.ui_setup.comboBox_vm.addItems(vm_list)
-        timeouts = ['8','9','10', '11','12']
+        timeouts = ['8', '9', '10', '11', '12']
         self.ui_setup.comboBox_2.addItems(timeouts)
 
         config = ConfigObj("config.ini")
@@ -436,7 +436,7 @@ class UIActionAndSignals(QObject):
         self.ui_editor.pushButton_save_current_strategy.setEnabled(False)
         try:
             if self.p.selected_strategy['computername'] == os.environ['COMPUTERNAME'] or \
-                            os.environ['COMPUTERNAME'] == 'NICOLAS-ASUS' or os.environ['COMPUTERNAME'] == 'Home-PC-ND':
+                    os.environ['COMPUTERNAME'] == 'NICOLAS-ASUS' or os.environ['COMPUTERNAME'] == 'Home-PC-ND':
                 self.ui_editor.pushButton_save_current_strategy.setEnabled(True)
         except Exception as e:
             pass
@@ -448,9 +448,12 @@ class UIActionAndSignals(QObject):
 
         self.ui_editor.use_relative_equity.setChecked(self.p.selected_strategy['use_relative_equity'])
         self.ui_editor.use_pot_multiples.setChecked(self.p.selected_strategy['use_pot_multiples'])
-        self.ui_editor.opponent_raised_without_initiative_flop.setChecked(self.p.selected_strategy['opponent_raised_without_initiative_flop'])
-        self.ui_editor.opponent_raised_without_initiative_turn.setChecked(self.p.selected_strategy['opponent_raised_without_initiative_turn'])
-        self.ui_editor.opponent_raised_without_initiative_river.setChecked(self.p.selected_strategy['opponent_raised_without_initiative_river'])
+        self.ui_editor.opponent_raised_without_initiative_flop.setChecked(
+            self.p.selected_strategy['opponent_raised_without_initiative_flop'])
+        self.ui_editor.opponent_raised_without_initiative_turn.setChecked(
+            self.p.selected_strategy['opponent_raised_without_initiative_turn'])
+        self.ui_editor.opponent_raised_without_initiative_river.setChecked(
+            self.p.selected_strategy['opponent_raised_without_initiative_river'])
         self.ui_editor.differentiate_reverse_sheet.setChecked(self.p.selected_strategy['differentiate_reverse_sheet'])
         self.ui_editor.preflop_override.setChecked(self.p.selected_strategy['preflop_override'])
         self.ui_editor.gather_player_names.setChecked(self.p.selected_strategy['gather_player_names'])
@@ -533,10 +536,12 @@ class UIActionAndSignals(QObject):
         self.strategy_dict['use_relative_equity'] = int(self.ui_editor.use_relative_equity.isChecked())
         self.strategy_dict['use_pot_multiples'] = int(self.ui_editor.use_pot_multiples.isChecked())
 
-        self.strategy_dict['opponent_raised_without_initiative_flop'] = int(self.ui_editor.opponent_raised_without_initiative_flop.isChecked())
-        self.strategy_dict['opponent_raised_without_initiative_turn'] = int(self.ui_editor.opponent_raised_without_initiative_turn.isChecked())
-        self.strategy_dict['opponent_raised_without_initiative_river'] = int(self.ui_editor.opponent_raised_without_initiative_river.isChecked())
-
+        self.strategy_dict['opponent_raised_without_initiative_flop'] = int(
+            self.ui_editor.opponent_raised_without_initiative_flop.isChecked())
+        self.strategy_dict['opponent_raised_without_initiative_turn'] = int(
+            self.ui_editor.opponent_raised_without_initiative_turn.isChecked())
+        self.strategy_dict['opponent_raised_without_initiative_river'] = int(
+            self.ui_editor.opponent_raised_without_initiative_river.isChecked())
 
         self.strategy_dict['differentiate_reverse_sheet'] = int(self.ui_editor.differentiate_reverse_sheet.isChecked())
         self.strategy_dict['preflop_override'] = int(self.ui_editor.preflop_override.isChecked())
@@ -599,7 +604,7 @@ class FundsPlotter(FigureCanvas):
         data = np.cumsum(data)
         self.fig.clf()
         self.axes = self.fig.add_subplot(111)  # create an axis
-        self.axes.clear() # discards the old graph
+        self.axes.clear()  # discards the old graph
         self.axes.set_title('My Funds')
         self.axes.set_xlabel('Time')
         self.axes.set_ylabel('$')
@@ -618,7 +623,6 @@ class BarPlotter(FigureCanvas):
 
     def drawfigure(self, l, strategy):
         self.axes = self.fig.add_subplot(111)  # create an axis
-
 
         data = l.get_stacked_bar_data('Template', strategy, 'stackedBar')
 
@@ -797,7 +801,7 @@ class PiePlotter(FigureCanvas):
 
 class CurvePlot(FigureCanvas):
     def __init__(self, ui, p, layout='vLayout3'):
-        self.p=p
+        self.p = p
         self.ui = proxy(ui)
         self.fig = Figure(dpi=50)
         super(CurvePlot, self).__init__(self.fig)
@@ -808,7 +812,6 @@ class CurvePlot(FigureCanvas):
 
     def drawfigure(self):
         self.axes = self.fig.add_subplot(111)  # create an axis
-
 
         self.axes.axis((0, 1, 0, 1))
         self.axes.set_title('Maximum bet')
@@ -832,15 +835,18 @@ class CurvePlot(FigureCanvas):
 
         self.draw()
 
-    def update_lines(self, power1, power2, minEquityCall, minEquityBet, smallBlind, bigBlind, maxValue, maxvalue_bet, maxEquityCall,
+    def update_lines(self, power1, power2, minEquityCall, minEquityBet, smallBlind, bigBlind, maxValue, maxvalue_bet,
+                     maxEquityCall,
                      max_X,
                      maxEquityBet):
         x2 = np.linspace(0, 1, 100)
 
         minimum_curve_value = 0 if self.p.selected_strategy['use_pot_multiples'] else smallBlind
         minimum_curve_value2 = 0 if self.p.selected_strategy['use_pot_multiples'] else bigBlind
-        d1 = Curvefitting(x2, minimum_curve_value, minimum_curve_value2 * 2, maxValue, minEquityCall, maxEquityCall, max_X, power1)
-        d2 = Curvefitting(x2, minimum_curve_value, minimum_curve_value2, maxvalue_bet, minEquityBet, maxEquityBet, max_X, power2)
+        d1 = Curvefitting(x2, minimum_curve_value, minimum_curve_value2 * 2, maxValue, minEquityCall, maxEquityCall,
+                          max_X, power1)
+        d2 = Curvefitting(x2, minimum_curve_value, minimum_curve_value2, maxvalue_bet, minEquityBet, maxEquityBet,
+                          max_X, power2)
         x = np.arange(0, 1, 0.01)
         try:
             self.line1.remove()
@@ -878,7 +884,7 @@ class FundsChangePlot(FigureCanvas):
         data = L.get_fundschange_chart(p_name)
         self.fig.clf()
         self.axes = self.fig.add_subplot(111)  # create an axis
-        self.axes.clear()   # discards the old graph
+        self.axes.clear()  # discards the old graph
         self.axes.set_title('My Funds')
         self.axes.set_xlabel('Time')
         self.axes.set_ylabel('$')
