@@ -1,24 +1,45 @@
-Neuron Poker: OpenAi gym environment for texas holdem poker
-===========================================================
+Deep mind pokerbot for pokerstars and partypoker
+================================================
 
-This is an environment for training neural networks to play texas
-holdem. Please try to model your own players and create a pull request
-so we can collaborate and create the best possible player.
+This pokerbot plays automatically on Pokerstars and Partypoker.
+It works with image recognition, montecarlo simulation and a basic genetic algorithm.
+The mouse is moved automatically and the bot can play for hours.
+
+Please note that the table scraping needs updating as the layouts have
+changed on both pokerstars and partypoker. Also, to train the bot I have started a new project here:
+https://github.com/dickreuter/neuron_poker. The goal is to train agents by
+playing against each other. Please contribute by creating a new Agent.
+
+.. figure:: doc/fullscreen1.png
 
 Usage:
 ------
 
 Run:
 
--  Install Anaconda, I would also recommend to install pycharm.
+-  Install Anaconda with python 3.6. I would also recommend to install pycharm.
 - ``pip install -r requirements.txt``
--  Run 6 random players playing against each other:
-   ``main.py random --render`` or
--  To manually control the players:``main.py keypress --render``
--  Example of genetic algorighm with self improvement: ``main.py equity_improvement --improvement_rounds=20 --episodes=10``
+- Run ``main.py``
 
-.. figure:: doc/table.png
-   :alt: 
+For a start please make sure of the following:
+
+Use Partypoker standard setup. Currently, the bot only works on tables with 6 people and where the bot is always sat at the bottom right.
+Put the partypoker client (inside the VM) and the bot outside the VM. Put them next to each other so that the bot can see the full table of Partypoker.
+In setup choose Direct Mouse Control. It will then take direct screenshots and move the mouse. If that works, you can try with direct VM control.
+Start with a table like Supersonic2 on Partypoker where the stakes are low ( In the strategy editor create a copy of a Supersonic2 strategy and edit it yourself so that you win.
+The bot may not work with play money as it's optimised on small stakes to read the numbers correctly.
+
+
+Strategies
+----------
+The decision is made by the Decision class in decisionmaker1.py. A variety of factors are taken into consideration:
+
+- Equity (winning probability), which is calculated by Montecarlo_v3.py (will be replaced with a faster numpy-only version in Montecarlo_v4.py)
+- Equity and minimum call/bet value need to be on the left of the corresponding curve in order for the bot not to fold
+- Various other factors, such as behaviour in the previous round are taken into consideration
+
+.. figure:: doc/strategy_analyser1.jpg
+.. figure:: doc/strategy_analyser_scatter.jpg
 
 Packages and modules:
 ~~~~~~~~~~~~~~~~~~~~~
@@ -26,24 +47,59 @@ Packages and modules:
 main.py: entry point and command line interpreter. Runs agents with the
 gym.
 
-gym\_env
-^^^^^^^^
+Coordinates file: coordinates.txt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  ``env.py``: Texas Hold’em unlimited openai gym environment &
-   ``rendering.py``: rendering graphics while playing
+screen_scraping:
 
-agents
-^^^^^^
-Please add your model based agents here.
+- get_other_player_pots: Start with the player after the bot and move clockwise forward
+- get_other_player_status: Start with the player after the bot and move clockwise forward
+- get_dealer_position: This one goes counter clockwise and starts with 3 players before the bot, which is the player that is the dealer when the bot is UTG. The second entry is the dealer position when the bot is UTG+1
 
--  ``agent_random.py``: an agent making random decisions
--  ``agent_keypress.py``: an agent taking decision via keypress
--  ``agent_consider_equity.py``: an agent considering equity information
+mouse_mover
 
-Note that the observation property is a dictionary that contains all the information about the players and table that can be used to make a decision.
+The mouse mover describes where the mouse needs to move to when action is taken. Please note that it is randomized. The system works as follows: [1,0,419,493,100,35] means
 
-tools
-^^^^^
+[repetition, delay in secs, x1,y1,width,height]
+Each mouse action can have several buttons, for example bet plus means it fist presses the plus button several times and then goes on to press raise.
+
+- BetPlus:3, 0.3, 673, 465, 30, 10],[1,0, 675, 492, 100, 31. This means, press the plus button 3 times (with the top left coordinates of the button, and then how wide and high the button is for the randomization, wait for 0.3 seconds and then move on to press the raise button once.
+- Bet Bluff: This will be the same as the raise button (bet)
+- Call2: All in call button, is where usually the raise button is in pokerstars
+
+
+Edit or fix the coordinates
+
+In case of a poker software update, the elements positions would move on screen, you can help the scraper to find accurate image elements bounds:
+
+Before taking screenshots of virtual machine, be sure to setup the poker software correctly
+
+1) Extract the coordinates to SVG files
+
+- go to table folder
+- cd /Poker/poker/tables
+- take a screenshot of your VM with the poker software inside (you can find some in your poker/log/screenshots folder), the shot needs its top left corner to be guessable by the scraper (ie the poker bot logs " - table - DEBUG - Top left corner found"))
+
+2) save it to /Poker/poker/tables/backgrounds/{TABLE_NAME}.png where TABLE_NAME depends on the table you want to edit (PS2, PS, SN, PP)
+
+Transform the coordinates.json into svg files :
+
+
+2) edit the coordinates
+edit the coordinates file(s) created in /Poker/poker/tables/templates/.svg with inkscape
+
+You can then move and scale the element groups of the svg files with inkscape, it doesn't matter if the text is also scaled. If you delete a foreground element to edit the ones behind, it won't delete the element in coordinates.json file, it's coordinates just won't be updated.
+
+You may want to change the image in background in order to visualize all the elements. Hit Edit -> xml editor in inkscape. In the xml view, click on the group with id="background", edit the xlink:href value and set it to your background image path.
+
+3) test the scraper results
+python 2-scrapingTester.py
+If the zones extracted by the scraper are incorrect, move the stuff again in the .svg files
+4) Save the edited coordinates back to the coordinates.json file
+python 3-save_svg_back_to_coordinates.py
+
+poker.tools
+^^^^^^^^^^^
 
 -  ``hand_evaluator.py``: evaluate the best hand of multiple players
 -  ``helper.py``: helper functions
@@ -52,110 +108,17 @@ tools
 -  ``montecarlo_python.py``: relatively slow python based montecarlo for equity calculation. Supports
    preflight ranges for other players.
 
-tests
-^^^^^
+poker.tests
+^^^^^^^^^^^
 
--  ``test_gym_env.py``: tests for the end.
--  ``test_montecarlo.py``: tests for the hands evaluator and python
-   based equity calculator.
 -  ``test_montecarlo_numpy.py``: tests for the numpy montecarlo
 -  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards and static code analysis
+
+
 
 How to contribute
 ~~~~~~~~~~~~~~~~~
 
-Launching
-^^^^^^^^^
-
-In ``main.py`` an agent is launched as follows (here adding 6 random
-agents to the table). To edit what is accepted to main.py via command
-line, simply add another line in the docstring at the top of main.py.
-
-.. code:: python
-
-    def random_action(render):
-        """Create an environment with 6 random players"""
-        env_name = 'neuron_poker-v0'
-        stack = 500
-        self.env = gym.make(env_name, num_of_players=6, initial_stacks=stack)
-        for _ in range(num_of_plrs):
-            player = RandomPlayer(500)
-            self.env.add_player(player)
-
-        self.env.reset()
-
-As you can see, as a first step, the environment needs to be created. As a second step, different agents need to be
-added to the table. As a third step the game is kicked off with a reset. Agents with autoplay set to True will automatically
-play, by having the action method called of their class. Alternatively you can use the PlayerShell class
-and the environment will require you call call the step function manually and loop over it. This may be helpful
-when using other packages which are designed to interface with the gym, such as keras-rl.
-
-Adding a new model / agent
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-An example agent can be seen in random\_agent.py
-
-To build a new agent, an agent needs to be created, where the follwing
-function is modified. You will need to use the observation parameter,
-which contains the current state of the table, the players and and the
-agent itself, as a parameter to determine the best action.
-
-.. code:: python
-
-    def action(self, action_space, observation):  # pylint: disable=no-self-use
-        """Mandatory method that calculates the move based on the observation array and the action space."""
-        _ = observation  # not using the observation for random decision
-        this_player_action_space = {Action.FOLD, Action.CHECK, Action.CALL, Action.RAISE_POT, Action.RAISE_HAlF_POT}
-        possible_moves = this_player_action_space.intersection(set(action_space))
-        action = random.choice(list(possible_moves))
-        return action
-
-Observation
-^^^^^^^^^^^
-
-The state is represented as a numpy array that contains the following
-information:
-
-.. code:: python
-
-    class CommunityData:
-        def __init__(self, num_players):
-            self.current_player_position = [False] * num_players  # ix[0] = dealer
-            self.stage = [False] * 4  # one hot: preflop, flop, turn, river
-            self.community_pot: float: the full pot of this hand
-            self.current_round_pot: float: the pot of funds added in this round
-            self.active_players = [False] * num_players  # one hot encoded, 0 = dealer
-            self.big_blind
-            self.small_blind
-
-
-    class StageData:  # as a list, 8 times:
-        """Preflop, flop, turn and river, 2 rounds each"""
-
-        def __init__(self, num_players):
-            self.calls = [False] * num_players  # ix[0] = dealer
-            self.raises = [False] * num_players  # ix[0] = dealer
-            self.min_call_at_action = [0] * num_players  # ix[0] = dealer
-            self.contribution = [0] * num_players  # ix[0] = dealer
-            self.stack_at_action = [0] * num_players  # ix[0] = dealer
-            self.community_pot_at_action = [0] * num_players  # ix[0] = dealer
-
-
-    class PlayerData:
-        "Player specific information"
-
-        def __init__(self):
-            self.position: one hot encoded, 0=dealer
-            self.equity_to_river: montecarlo
-            self.equity_to_river_2plr: montecarlo
-            self.equity_to_river_3plr: montecarlo
-            self.stack: current player stack
-
-Final analysis:
-^^^^^^^^^^^^^^^
-
-At the end of the game the performance of the players can be observed.
-|image0|
 
 Github
 ^^^^^^
@@ -171,7 +134,7 @@ To contribute do the following:
 - Add as remote the original repository where you created the fork from and call it upstream (the connection to your fork should be called origin). This can be done with vcs --> git --> remotes
 - Create a new branch: click on master at the bottom right, and then click on 'new branch'
 - Make your edits.
-- Ensure all tests pass. Under file --> settings --> python integrated tools switch to pytest (see screenshot). |image1| You can then just right click on the tests folder and run all tests. All tests need to pass. Make sure to add your own tests by simply naming the funtion test\_... \
+- Ensure all tests pass. Under file --> settings --> python integrated tools switch to pytest. You can then just right click on the tests folder and run all tests. All tests need to pass. Make sure to add your own tests by simply naming the funtion test\_... \
 - Make sure all the tests are passing. Best run pytest as described above (in pycharm just right click on the tests folder and run it). If a test fails, you can debug the test, by right clicking on it and put breakpoints, or even open a console at the breakpoint: https://stackoverflow.com/questions/19329601/interactive-shell-debugging-with-pycharm
 - Commit your changes (CTRL+K}
 - Push your changes to your origin (your fork) (CTRL+SHIFT+K)
@@ -179,29 +142,42 @@ To contribute do the following:
 - Create a pull request on your github.com to merge your branch with the upstream master.
 - When your pull request is approved, it will be merged into the upstream/master.
 
-Agents
-------
-
-- [x] Agent based on user interaction (keypress)
-- [x] Random agent
-- [x] Equity based strategy (i.e. call and bet above threshold)
-- [x] Equity based strategy with genetic algorithm, adjusting the treshold based on winning agent.
-- [/] Reinforcement learning with experience replay [not yet working correctly]
-- [ ] Deep SARSA [[10]](http://people.inf.elte.hu/lorincz/Files/RL_2006/SuttonBook.pdf)
-- [ ] Asynchronous Advantage Actor-Critic (A3C) [[5]](http://arxiv.org/abs/1602.01783)
-- [ ] Proximal Policy Optimization Algorithms (PPO) [[11]](https://arxiv.org/abs/1707.06347)
 
 Roadmap
 -------
-- [x] Build an openai gym environment for texas holdem
-- [/] Iron out bugs (your help is required)
-- [ ] Add more agents
+- [x] Build a framework that can play online
+- [ ] Fix pylint errors and imporve code quality
+- [ ] Update the pokerbox to the new table format of partypoker
+- [ ] Update the pokerbox to the new table format of pokerstars
+- [ ] Add more strategies
 
-Current league table
---------------------
 
-#)  Equity based player
-#)  Random player
+FAQ
+---
 
-.. |image0| image:: doc/pots.png
-.. |image1| image:: doc/pytest.png
+Why is the bot not working?
+
+-  It only works on windows currently
+- It only works with fast forward games with real money on PartyPoker. Use the Supersonic3 table for Partypoker or McNaught table in Pokerstars
+- The poker table window has to be fully visible and cannot be scaled, otherwise it won't be detected properly
+- In Partypoker, when you open the table, choose table options and then choose **back to default size** to make sure the table is in default size.
+
+What about Pokerstars?
+
+- Almost ready. Check the wiki how you can help.
+
+Errors related to the virtual machine
+
+- Go to setup and choose direct mouse control.
+
+Do I need to use a virtual machine?
+
+- For Pokerstars you definitely do, otherwise you will be blocked and your account will be frozen within minutes. For Partypoker I'm not sure. But it's probably a good idea.
+
+The bot does not recognize the table and doesn't act
+
+- Make su**re everything looks exactly like in the picture below. The buttons need to look exactly like this and it needs to be in English and not scaled. Colours need to be standard.**
+
+Still having problems?
+
+- Check the log file. In the folder where you installed the pokerbot, there is a subfolder with the log files in /log. There are also screenshots in /log/screenshots that may be able to help debug the problem. Please contact me on google hangout under dickreuter@gmail.com.

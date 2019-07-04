@@ -8,14 +8,15 @@ matplotlib
 keras
 docopt
 lmfit
-pyqt
 scipy
 opencv-python
 pillow
 pyinstaller
 pymongo
 pyqt5
+qt5
 pytesseract
 pyvbox
 pyyaml
-xrlrd
+requests
+configobj
