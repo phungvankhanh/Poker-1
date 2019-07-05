@@ -1,3 +1,5 @@
+import json
+
 import cv2
 from PIL import Image
 import numpy as np
@@ -74,7 +76,7 @@ if __name__=='__main__':
     screenshot_file = "C:/temp/ps.png"
     output_file = 'poker/log/table_setup_output.png'
     top_left_corner_file="poker/pics/PS/topleft.png"
-    coordinates_file='coordinates.txt'
+    coordinates_file='coordinates.json'
     table = 'PS2'
 
     s = Setup(topleftcorner_file=top_left_corner_file,
@@ -82,7 +84,7 @@ if __name__=='__main__':
               output_file=output_file)
 
     with open(coordinates_file, 'r') as inf:
-        c = eval(inf.read())
+        c = json.loads(inf.read())
         coo = c['screen_scraping']
 
     img = cv2.imread(output_file, 0)

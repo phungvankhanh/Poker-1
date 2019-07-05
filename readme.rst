@@ -47,8 +47,8 @@ Packages and modules:
 main.py: entry point and command line interpreter. Runs agents with the
 gym.
 
-Coordinates file: coordinates.txt
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Coordinates file: coordinates.json
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 screen_scraping:
 

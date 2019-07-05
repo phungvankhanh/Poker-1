@@ -15,11 +15,11 @@ pillow
 pyinstaller
 pymongo
 pyqt5
-qt5
 pytesseract
 pyvbox
 pyyaml
 requests
 configobj
 xlrd
+pyscreenshot
 Xlib

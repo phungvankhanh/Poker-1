@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 matplotlib.use('Qt5Agg')
-# os.environ['KERAS_BACKEND']='theano'
 import logging.handlers
 import pytesseract
 import threading
@@ -127,7 +126,7 @@ class ThreadManager(threading.Thread):
                 p.read_strategy()
                 t = TableScreenBased(p, gui_signals, self.game_logger, version)
                 mouse = MouseMoverTableBased(p.selected_strategy['pokerSite'])
-                mouse.move_mouse_away_from_buttons_jump
+                mouse.move_mouse_away_from_buttons_jump()
 
                 ready = t.take_screenshot(True, p) and \
                         t.get_top_left_corner(p) and \

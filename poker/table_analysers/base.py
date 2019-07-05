@@ -1,13 +1,15 @@
+import json
 import logging
+import os
 import re
 import sys
 import time
-import os
 
 import cv2  # opencv 3.0
 import numpy as np
+import pyscreenshot as ImageGrab
 import pytesseract
-from PIL import Image, ImageFilter, ImageGrab
+from PIL import Image, ImageFilter
 from configobj import ConfigObj
 
 from poker.decisionmaker.genetic_algorithm import GeneticAlgorithm
@@ -43,7 +45,6 @@ class Table(object):
                     #     self.img[x + y.upper()]=self.crop_image(self.img[x + y.upper()], 5,5,20,45)
 
                     self.cardImages[x + y.upper()] = cv2.cvtColor(np.array(self.img[x + y.upper()]), cv2.COLOR_BGR2RGB)
-
 
                     # (thresh, self.cardImages[x + y]) =
                     # cv2.threshold(self.cardImages[x + y], 128, 255,
@@ -109,8 +110,8 @@ class Table(object):
         self.betbutton = cv2.cvtColor(np.array(template), cv2.COLOR_BGR2RGB)
 
     def load_coordinates(self):
-        with open('coordinates.txt', 'r') as inf:
-            c = eval(inf.read())
+        with open('coordinates.json', 'r') as inf:
+            c = json.loads(inf.read())
             self.coo = c['screen_scraping']
 
     def take_screenshot(self, initial, p):
@@ -344,7 +345,7 @@ class Table(object):
 
         for n in range(5):  # n is absolute position of other player, 0 is player after bot
             i = (
-                    self.dealer_position + n + 3 - 2) % 5  # less myself as 0 is now first other player to my left and no longer myself
+                        self.dealer_position + n + 3 - 2) % 5  # less myself as 0 is now first other player to my left and no longer myself
             self.logger.debug("Go through pots to find raiser abs: {0} {1}".format(i, self.other_players[i]['pot']))
             if self.other_players[i]['pot'] != '':  # check if not empty (otherwise can't convert string)
                 if self.other_players[i]['pot'] > reference_pot:
@@ -371,7 +372,7 @@ class Table(object):
             if self.other_players[n]['pot'] != '':  # check if not empty (otherwise can't convert string)
                 if (self.other_players[n]['pot'] == float(
                         p.selected_strategy['bigBlind']) and not n == self.big_blind_position_abs_op) or \
-                                self.other_players[n]['pot'] > float(p.selected_strategy['bigBlind']):
+                        self.other_players[n]['pot'] > float(p.selected_strategy['bigBlind']):
                     first_caller = int(n)
                     break
 

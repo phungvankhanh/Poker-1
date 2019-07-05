@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 
@@ -102,8 +103,8 @@ class MouseMoverTableBased(MouseMover):
         super().__init__(self.vbox_mode)
 
         # amount,pre-delay,x1,xy,x1tolerance,x2tolerance
-        with open('coordinates.txt', 'r') as inf:
-            c = eval(inf.read())
+        with open('coordinates.json', 'r') as inf:
+            c = json.loads(inf.read())
             coo = c['mouse_mover']
 
         self.coo = coo[pokersite[0:2]]

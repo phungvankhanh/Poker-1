@@ -14,12 +14,13 @@ install:
   - source "$HOME"/miniconda/etc/profile.d/conda.sh
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda false
   - pip install requirements.txt
+  - yum install python3-pyqt5
   - export LANG=en_US.UTF-8
   - export COVERAGE_DIR=":$HOME/htmlcov"
   - printenv | sort
 
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements_travis.txt
 # command to run tests
 script: pytest --log-cli-level=warning
 
