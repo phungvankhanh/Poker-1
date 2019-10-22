@@ -31,7 +31,7 @@ terms and conditions of either the GPL or the CDDL or both.
 __version__ = "$Revision: 106598 $";
 
 
-
+# pylint: skip-file
 class VirtualBoxReflectionInfo:
     """
     Enum constants for the various python styles.

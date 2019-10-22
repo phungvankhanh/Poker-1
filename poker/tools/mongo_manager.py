@@ -159,6 +159,7 @@ class StrategyHandler(object):
         self.current_strategy = self.new_strategy_name
         del self.selected_strategy['_id']
         result = self.mongodb.strategies.insert_one(self.selected_strategy)
+        return result
 
     def save_strategy(self, strategy_dict):
         del strategy_dict['_id']
@@ -173,6 +174,7 @@ class StrategyHandler(object):
             {"Strategy": strategy['Strategy']},
             {"$set": strategy}
         )
+        return result
 
     def create_new_strategy(self, strategy):
         result = self.mongodb.strategies.insert_one(strategy)
@@ -195,7 +197,7 @@ class Singleton(type):
 
 class GameLogger(object, metaclass=Singleton):
     def __init__(self, connection='mongodb://guest:donald@dickreuter.com:27017/POKER'):
-        self.mongoclient = MongoClient('mongodb://guest:donald@dickreuter.com:27017/POKER')
+        self.mongoclient = MongoClient(connection)
         self.mongodb = self.mongoclient.POKER
 
     def clean_database(self):

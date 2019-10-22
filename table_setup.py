@@ -1,24 +1,25 @@
 import json
 
 import cv2
-from PIL import Image
 import numpy as np
-import cv2
+from PIL import Image
+
 
 class Setup():
     def __init__(self, topleftcorner_file: object, screenshot_file: object, output_file: object) -> object:
         self.topLeftCorner = cv2.cvtColor(np.array(Image.open(topleftcorner_file)), cv2.COLOR_BGR2RGB)
-        #screenshot = cv2.cvtColor(np.array(Image.open(screenshot_file)), cv2.COLOR_BGR2RGB)
+        # screenshot = cv2.cvtColor(np.array(Image.open(screenshot_file)), cv2.COLOR_BGR2RGB)
         screenshot = cv2.imread(screenshot_file)
 
         count, points, bestfit = self.find_template_on_screen(self.topLeftCorner, screenshot, 0.05)
-        #Image.open(screenshot_file).show()
+        # Image.open(screenshot_file).show()
         # cv2.imshow("Image",screenshot)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         self.tlc = points[0]
-        print ("TLC: "+str(self.tlc))
-        cropped_screenshoht=self.crop_image(Image.open(screenshot_file),self.tlc[0],self.tlc[1],self.tlc[0]+1000,self.tlc[1]+900)
+        print("TLC: " + str(self.tlc))
+        cropped_screenshoht = self.crop_image(Image.open(screenshot_file), self.tlc[0], self.tlc[1], self.tlc[0] + 1000,
+                                              self.tlc[1] + 900)
         cropped_screenshoht.save(output_file)
 
         #
@@ -72,11 +73,12 @@ class Setup():
         # cropped_example.show()
         return cropped_example
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     screenshot_file = "C:/temp/ps.png"
     output_file = 'poker/log/table_setup_output.png'
-    top_left_corner_file="poker/pics/PS/topleft.png"
-    coordinates_file='coordinates.json'
+    top_left_corner_file = "poker/pics/PS/topleft.png"
+    coordinates_file = 'coordinates.json'
     table = 'PS2'
 
     s = Setup(topleftcorner_file=top_left_corner_file,
@@ -100,10 +102,10 @@ if __name__=='__main__':
         except:
             pass
         try:
-            cv2.rectangle(img, (int(item[table]['x1']), int(item[table]['y1'])), (int(item[table]['x2']), int(item[table]['y2'])), 200)
+            cv2.rectangle(img, (int(item[table]['x1']), int(item[table]['y1'])),
+                          (int(item[table]['x2']), int(item[table]['y2'])), 200)
         except Exception as e:
             pass
-
 
     cv2.imshow('img', img)
     cv2.waitKey()

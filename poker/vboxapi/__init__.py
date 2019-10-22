@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: skip-file
 # $Id: vboxapi.py 106598 2016-04-14 13:43:08Z fmehnert $
 """
 VirtualBox Python API Glue.
