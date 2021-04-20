@@ -2,17 +2,19 @@ __author__ = 'Nicolas Dickreuter'
 '''
 Runs a Montecarlo simulation to calculate the probability of winning with a certain pokerhand and a given amount of players
 '''
-import operator
 import logging
+import operator
 import time
-import winsound
-import numpy as np
-
+# import winsound
 from collections import Counter
 from copy import copy
 
+import numpy as np
 
-class MonteCarlo(object):
+
+# pylint: disable=unidiomatic-typecheck
+
+class MonteCarlo:
     def __init__(self):
         self.logger = logging.getLogger('montecarlo')
         self.logger.setLevel(logging.DEBUG)
@@ -257,14 +259,14 @@ class MonteCarlo(object):
                     if suits.count(flushSuit) >= 5:
                         break
 
-                flushHand = [k for k in hand if flushSuit in k]
+                flushHand = [k for k in hand if flushSuit in k]  # pylint: disable=undefined-loop-variable
                 rcountsFlush = {card_ranks_original.find(r): ''.join(flushHand).count(r) for r, _ in flushHand}.items()
                 score, card_ranks = zip(*sorted((cnt, rank) for rank, cnt in rcountsFlush)[::-1])
                 card_ranks = tuple(
                     sorted(card_ranks, reverse=True))  # ignore original sorting where pairs had influence
 
                 # check for straight in flush
-                if 12 in card_ranks and not -1 in card_ranks:  # adjust if 5 high straight
+                if 12 in card_ranks and -1 not in card_ranks:  # adjust if 5 high straight
                     card_ranks += (-1,)
                 for i in range(len(card_ranks) - 4):
                     straight = card_ranks[i] - card_ranks[i + 4] == 4
@@ -317,7 +319,7 @@ class MonteCarlo(object):
         values = "23456789TJQKA"
         suites = "CDHS"
         Deck = []
-        [Deck.append(x + y) for x in values for y in suites]
+        _ = [Deck.append(x + y) for x in values for y in suites]
         return Deck
 
     def distribute_cards_to_players(self, deck, player_amount, player_card_list, known_table_cards,
@@ -326,7 +328,8 @@ class MonteCarlo(object):
         # rmove table cards from deck
         CardsOnTable = []
         for known_table_card in known_table_cards:
-            CardsOnTable.append(deck.pop(deck.index(known_table_card)))  # remove cards that are on the table from the deck
+            CardsOnTable.append(
+                deck.pop(deck.index(known_table_card)))  # remove cards that are on the table from the deck
 
         all_players = []
         knownPlayers = 0  # for potential collusion if more than one bot is running on the same table
@@ -339,7 +342,7 @@ class MonteCarlo(object):
                     passes += 1
                     random_card1 = np.random.randint(0, len(deck))
                     random_card2 = np.random.randint(0, len(deck) - 1)
-                    if not random_card1 == random_card2:
+                    if random_card1 != random_card2:
                         crd1, crd2 = self.get_two_short_notation([deck[random_card1], deck[random_card2]],
                                                                  add_O_to_pairs=False)
                         if crd1 in player_cards or crd2 in player_cards:
@@ -370,7 +373,7 @@ class MonteCarlo(object):
                 random_card1 = np.random.randint(0, len(deck))
                 random_card2 = np.random.randint(0, len(deck) - 1)
 
-                if not random_card1 == random_card2:
+                if random_card1 != random_card2:
                     crd1, crd2 = self.get_two_short_notation([deck[random_card1], deck[random_card2]],
                                                              add_O_to_pairs=False)
                     if crd1 in opponent_allowed_cards or crd2 in opponent_allowed_cards:
@@ -510,7 +513,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
 
         if collusion_cards != '':
             m.collusion_cards = collusion_cards
-            winsound.Beep(1000, 100)
+            # winsound.Beep(1000, 100)
             if not collusion_player_dropped_out:
                 t.PlayerCardList_and_others.append(collusion_cards)
                 logger.info("Collusion found, player still in game. " + str(collusion_cards))
@@ -553,31 +556,34 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
 
     # calculate range equity
     if t.gameStage != 'PreFlop' and p.selected_strategy['use_relative_equity']:
-        if p.selected_strategy['preflop_override'] and preflop_state.preflop_bot_ranges!= None:
+        if p.selected_strategy['preflop_override'] and preflop_state.preflop_bot_ranges != None:
             t.player_card_range_list_and_others = t.PlayerCardList_and_others[:]
             t.player_card_range_list_and_others[0] = preflop_state.preflop_bot_ranges
 
             t.range_equity, _ = m.run_montecarlo(logger, t.player_card_range_list_and_others, t.cardsOnTable,
-                                              int(t.assumedPlayers), ui,
-                                              maxRuns=maxRuns,
-                                              ghost_cards=ghost_cards, timeout=timeout, opponent_range=opponent_range)
+                                                 int(t.assumedPlayers), ui,
+                                                 maxRuns=maxRuns,
+                                                 ghost_cards=ghost_cards, timeout=timeout,
+                                                 opponent_range=opponent_range)
             t.range_equity = np.round(t.range_equity, 2)
             logger.debug("Range montecarlo completed successfully with runs: " + str(m.runs))
             logger.debug("Range equity (range for bot): " + str(t.range_equity))
 
-    if preflop_state.preflop_bot_ranges == None and p.selected_strategy['preflop_override'] and t.gameStage != 'PreFlop':
+    if preflop_state.preflop_bot_ranges == None and p.selected_strategy[
+        'preflop_override'] and t.gameStage != 'PreFlop':
         logger.error("No preflop range for bot, assuming 50% relative equity")
-        t.range_equity=.5
+        t.range_equity = .5
 
     ui_action_and_signals.signal_progressbar_increase.emit(10)
     ui_action_and_signals.signal_status.emit("Running card Monte Carlo: " + str(maxRuns))
 
     # run montecarlo for absolute equity
-    t.abs_equity, _ = m.run_montecarlo(logger, t.PlayerCardList_and_others, t.cardsOnTable, int(t.assumedPlayers), ui, maxRuns=maxRuns,
-                     ghost_cards=ghost_cards, timeout=timeout, opponent_range=opponent_range)
+    t.abs_equity, _ = m.run_montecarlo(logger, t.PlayerCardList_and_others, t.cardsOnTable, int(t.assumedPlayers), ui,
+                                       maxRuns=maxRuns,
+                                       ghost_cards=ghost_cards, timeout=timeout, opponent_range=opponent_range)
     ui_action_and_signals.signal_status.emit("Monte Carlo completed successfully")
     logger.debug("Cards Monte Carlo completed successfully with runs: " + str(m.runs))
-    logger.info("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity,2)))
+    logger.info("Absolute equity (no ranges for bot) " + str(np.round(t.abs_equity, 2)))
 
     if t.gameStage == "PreFlop":
         crd1, crd2 = m.get_two_short_notation(t.mycards)
@@ -589,7 +595,7 @@ def run_montecarlo_wrapper(p, ui_action_and_signals, config, ui, t, L, preflop_s
             m.equity = m.preflop_equities[crd1 + 'O']
         else:
             logger.warning("Preflop equity not found in lookup table: " + str(crd1))
-        t.abs_equity=m.equity
+        t.abs_equity = m.equity
 
     t.abs_equity = np.round(t.abs_equity, 2)
     t.winnerCardTypeList = m.winnerCardTypeList

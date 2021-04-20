@@ -3,8 +3,8 @@ from copy import copy, deepcopy
 
 import numpy as np
 
-# from poker.card_recognition.card_neural_network import CardNeuralNetwork
 
+# pylint: disable=unused-argument
 
 class History:
     def __init__(self):

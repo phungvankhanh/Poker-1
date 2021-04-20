@@ -1,21 +1,25 @@
+import time
+import logging
+import numpy as np
 import virtualbox
 from PIL import Image
-import time
 from configobj import ConfigObj
-import numpy as np
-import logging
+
+from poker.tools.helper import CONFIG_FILENAME
 
 
 class VirtualBoxController(virtualbox.library.IMouse):
     def __init__(self):
+        super().__init__()
+        self.vm = None
+        self.session = None
         self.logger = logging.getLogger('vm_control')
         self.logger.setLevel(logging.DEBUG)
         try:
             self.vbox = virtualbox.VirtualBox()
-            list = self.get_vbox_list()
-            config = ConfigObj("config.ini")
+            config = ConfigObj(CONFIG_FILENAME)
             self.control_name = config['control']
-            if self.control_name not in list:
+            if self.control_name not in self.get_vbox_list():
                 self.control_name = 'Direct mouse control'
                 config['control'] = 'Direct mouse control'
                 config.write()
@@ -43,7 +47,7 @@ class VirtualBoxController(virtualbox.library.IMouse):
         open('screenshot_vbox.png', 'wb').write(png)
         # image=Image.fromarray(png)
         # image.show()
-        time.sleep(0.5)
+        time.sleep(0.2)
         return Image.open('screenshot_vbox.png')
 
     def mouse_move_vbox(self, x, y, dz=0, dw=0):
@@ -59,17 +63,3 @@ class VirtualBoxController(virtualbox.library.IMouse):
         x = self.session.console.mouse_pointer_shape.hot_x()
         y = self.session.console.mouse_pointer_shape.hot_y()
         return x, y
-
-
-if __name__ == '__main__':
-    vb = VirtualBoxController()
-    list = vb.get_vbox_list()
-
-    vb.start_vm()
-    vb.mouse_click_vbox(10, 12)
-    x, y = vb.get_mouse_position_vbox()
-    print(x, y)
-
-    # vb.mouse_move_vbox(1,1)
-    # vb.mouse_click_vbox(1,1)
-    # vb.get_screenshot_vbox()

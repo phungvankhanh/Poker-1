@@ -1,43 +1,53 @@
-import matplotlib
-import pandas as pd
-import time
-import numpy as np
-
-matplotlib.use('Qt5Agg')
-import os
-# os.environ['KERAS_BACKEND']='theano'
-import logging.handlers
-import pytesseract
-import threading
 import datetime
+import logging.handlers
 import sys
-from PIL import Image
+import threading
+import time
+import warnings
+from sys import platform
+
+import matplotlib
+import numpy as np
+import pandas as pd
 from PyQt5 import QtWidgets, QtGui
+
+if platform not in ["linux", "linux2"]:
+    matplotlib.use('Qt5Agg')
 from configobj import ConfigObj
-from poker.gui.gui_qt_ui import Ui_Pokerbot
-from poker.gui.gui_qt_logic import UIActionAndSignals
-from poker.tools.mongo_manager import StrategyHandler, UpdateChecker, GameLogger
-from poker.table_analysers.table_screen_based import TableScreenBased
+from poker.tools.game_logger import GameLogger
+from poker.tools.helper import init_logger, CONFIG_FILENAME
+from poker.tools.update_checker import UpdateChecker
+from poker.tools.mouse_mover import MouseMoverTableBased
+from poker.tools.mongo_manager import MongoManager
+from poker.gui.main_window import UiPokerbot
+from poker.gui.action_and_signals import UIActionAndSignals, StrategyHandler
+from poker.scraper.table_screen_based import TableScreenBased
 from poker.decisionmaker.current_hand_memory import History, CurrentHandPreflopState
 from poker.decisionmaker.montecarlo_python import run_montecarlo_wrapper
 from poker.decisionmaker.decisionmaker import Decision
-from poker.tools.mouse_mover import MouseMoverTableBased
 
+# pylint: disable=no-member,simplifiable-if-expression,protected-access
 
-version = 3.05
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+warnings.filterwarnings("ignore", message="ignoring `maxfev` argument to `Minimizer()`. Use `max_nfev` instead.")
+warnings.filterwarnings("ignore", message="DataFrame columns are not unique, some columns will be omitted.")
+warnings.filterwarnings("ignore", message="All-NaN axis encountered")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-
+version = 4.41
+ui = None
 
 
 class ThreadManager(threading.Thread):
-    def __init__(self, threadID, name, counter, gui_signals):
+    def __init__(self, threadID, name, counter, gui_signals, updater):
         threading.Thread.__init__(self)
         self.threadID = threadID
+        self.gui_signals = gui_signals
+        self.updater = updater
         self.name = name
         self.counter = counter
-        self.gui_signals = gui_signals
-        self.logger = logging.getLogger('main')
-        self.logger.setLevel(logging.DEBUG)
+        self.loger = logging.getLogger('main')
 
         self.game_logger = GameLogger()
 
@@ -50,47 +60,47 @@ class ThreadManager(threading.Thread):
         gui_signals.signal_status.emit(d.decision)
         range2 = ''
         if hasattr(t, 'reverse_sheet_name'):
-            range = t.reverse_sheet_name
+            _range = t.reverse_sheet_name
             if hasattr(preflop_state, 'range_column_name'):
                 range2 = " " + preflop_state.range_column_name + ""
 
         else:
-            range = str(m.opponent_range)
-        if range == '1': range = 'All cards'
+            _range = str(m.opponent_range)
+        if _range == '1':
+            _range = 'All cards'
 
         if t.gameStage != 'PreFlop' and p.selected_strategy['preflop_override']:
-            sheet_name=preflop_state.preflop_sheet_name
+            sheet_name = preflop_state.preflop_sheet_name
 
         gui_signals.signal_label_number_update.emit('equity', str(np.round(t.abs_equity * 100, 2)) + "%")
-        gui_signals.signal_label_number_update.emit('required_minbet', str(np.round(t.minBet,2)))
-        gui_signals.signal_label_number_update.emit('required_mincall', str(np.round(t.minCall,2)))
+        gui_signals.signal_label_number_update.emit('required_minbet', str(np.round(t.minBet, 2)))
+        gui_signals.signal_label_number_update.emit('required_mincall', str(np.round(t.minCall, 2)))
         # gui_signals.signal_lcd_number_update.emit('potsize', t.totalPotValue)
         gui_signals.signal_label_number_update.emit('gamenumber',
                                                     str(int(self.game_logger.get_game_count(p.current_strategy))))
         gui_signals.signal_label_number_update.emit('assumed_players', str(int(t.assumedPlayers)))
-        gui_signals.signal_label_number_update.emit('calllimit', str(np.round(d.finalCallLimit,2)))
-        gui_signals.signal_label_number_update.emit('betlimit', str(np.round(d.finalBetLimit,2)))
+        gui_signals.signal_label_number_update.emit('calllimit', str(np.round(d.finalCallLimit, 2)))
+        gui_signals.signal_label_number_update.emit('betlimit', str(np.round(d.finalBetLimit, 2)))
         gui_signals.signal_label_number_update.emit('runs', str(int(m.runs)))
         gui_signals.signal_label_number_update.emit('sheetname', sheet_name)
         gui_signals.signal_label_number_update.emit('collusion_cards', str(m.collusion_cards))
         gui_signals.signal_label_number_update.emit('mycards', str(t.mycards))
         gui_signals.signal_label_number_update.emit('tablecards', str(t.cardsOnTable))
-        gui_signals.signal_label_number_update.emit('opponent_range', str(range) + str(range2))
+        gui_signals.signal_label_number_update.emit('opponent_range', str(_range) + str(range2))
         gui_signals.signal_label_number_update.emit('mincallequity', str(np.round(t.minEquityCall, 2) * 100) + "%")
         gui_signals.signal_label_number_update.emit('minbetequity', str(np.round(t.minEquityBet, 2) * 100) + "%")
         gui_signals.signal_label_number_update.emit('outs', str(d.outs))
         gui_signals.signal_label_number_update.emit('initiative', str(t.other_player_has_initiative))
-        gui_signals.signal_label_number_update.emit('round_pot', str(np.round(t.round_pot_value,2)))
-        gui_signals.signal_label_number_update.emit('pot_multiple', str(np.round(d.pot_multiple,2)))
+        gui_signals.signal_label_number_update.emit('round_pot', str(np.round(t.round_pot_value, 2)))
+        gui_signals.signal_label_number_update.emit('pot_multiple', str(np.round(d.pot_multiple, 2)))
 
         if t.gameStage != 'PreFlop' and p.selected_strategy['use_relative_equity']:
-            gui_signals.signal_label_number_update.emit('relative_equity', str(np.round(t.relative_equity,2) * 100) + "%")
-            gui_signals.signal_label_number_update.emit('range_equity', str(np.round(t.range_equity,2) * 100) + "%")
+            gui_signals.signal_label_number_update.emit('relative_equity',
+                                                        str(np.round(t.relative_equity, 2) * 100) + "%")
+            gui_signals.signal_label_number_update.emit('range_equity', str(np.round(t.range_equity, 2) * 100) + "%")
         else:
             gui_signals.signal_label_number_update.emit('relative_equity', "")
             gui_signals.signal_label_number_update.emit('range_equity', "")
-
-
 
         # gui_signals.signal_lcd_number_update.emit('zero_ev', round(d.maxCallEV, 2))
 
@@ -102,155 +112,153 @@ class ThreadManager(threading.Thread):
 
         gui_signals.signal_curve_chart_update2.emit(t.power1, t.power2, t.minEquityCall, t.minEquityBet,
                                                     t.smallBlind, t.bigBlind,
-                                                    t.maxValue_call,t.maxValue_bet,
+                                                    t.maxValue_call, t.maxValue_bet,
                                                     t.maxEquityCall, t.max_X, t.maxEquityBet)
 
     def run(self):
-        h = History()
-        preflop_url, preflop_url_backup = u.get_preflop_sheet_url()
+        log = logging.getLogger(__name__)
+        history = History()
+        preflop_url, preflop_url_backup = self.updater.get_preflop_sheet_url()
         try:
-            h.preflop_sheet = pd.read_excel(preflop_url, sheetname=None)
+            history.preflop_sheet = pd.read_excel(preflop_url, sheet_name=None, engine='openpyxl')
         except:
-            h.preflop_sheet = pd.read_excel(preflop_url_backup, sheetname=None)
+            history.preflop_sheet = pd.read_excel(preflop_url_backup, sheet_name=None, engine='openpyxl')
 
         self.game_logger.clean_database()
 
-        p = StrategyHandler()
-        p.read_strategy()
+        strategy = StrategyHandler()
+        strategy.read_strategy()
 
         preflop_state = CurrentHandPreflopState()
+        mongo = MongoManager()
+        table_scraper_name = None
 
         while True:
+            # reload table if changed
+            config = ConfigObj(CONFIG_FILENAME)
+            if table_scraper_name != config['table_scraper_name']:
+                table_scraper_name = config['table_scraper_name']
+                log.info(f"Loading table scraper info for {table_scraper_name}")
+                table_dict = mongo.get_table(table_scraper_name)
+
             if self.gui_signals.pause_thread:
-                while self.gui_signals.pause_thread == True:
-                    time.sleep(1)
-                    if self.gui_signals.exit_thread == True: sys.exit()
+                while self.gui_signals.pause_thread:
+                    time.sleep(0.5)
+                    if self.gui_signals.exit_thread:
+                        sys.exit()
 
             ready = False
-            while (not ready):
-                p.read_strategy()
-                t = TableScreenBased(p, gui_signals, self.game_logger, version)
-                mouse = MouseMoverTableBased(p.selected_strategy['pokerSite'])
-                mouse.move_mouse_away_from_buttons_jump
+            while not ready:
+                strategy.read_strategy()
+                table = TableScreenBased(strategy, table_dict, self.gui_signals, self.game_logger, version)
+                mouse = MouseMoverTableBased(table_dict)
+                mouse.move_mouse_away_from_buttons_jump()
 
-                ready = t.take_screenshot(True, p) and \
-                        t.get_top_left_corner(p) and \
-                        t.check_for_captcha(mouse) and \
-                        t.get_lost_everything(h, t, p, gui_signals) and \
-                        t.check_for_imback(mouse) and \
-                        t.get_my_cards(h) and \
-                        t.get_new_hand(mouse, h, p) and \
-                        t.get_table_cards(h) and \
-                        t.upload_collusion_wrapper(p, h) and \
-                        t.get_dealer_position() and \
-                        t.get_snowie_advice(p, h) and \
-                        t.check_fast_fold(h, p, mouse) and \
-                        t.check_for_button() and \
-                        t.get_round_number(h) and \
-                        t.init_get_other_players_info() and \
-                        t.get_other_player_names(p) and \
-                        t.get_other_player_funds(p) and \
-                        t.get_other_player_pots() and \
-                        t.get_total_pot_value(h) and \
-                        t.get_round_pot_value(h) and \
-                        t.check_for_checkbutton() and \
-                        t.get_other_player_status(p, h) and \
-                        t.check_for_call() and \
-                        t.check_for_betbutton() and \
-                        t.check_for_allincall() and \
-                        t.get_current_call_value(p) and \
-                        t.get_current_bet_value(p)
+                ready = table.take_screenshot(True, strategy) and \
+                        table.get_top_left_corner(strategy) and \
+                        table.check_for_captcha(mouse) and \
+                        table.get_lost_everything(history, table, strategy, self.gui_signals) and \
+                        table.check_for_imback(mouse) and \
+                        table.get_my_cards(history) and \
+                        table.get_new_hand(mouse, history, strategy) and \
+                        table.get_table_cards(history) and \
+                        table.upload_collusion_wrapper(strategy, history) and \
+                        table.get_dealer_position() and \
+                        table.check_fast_fold(history, strategy, mouse) and \
+                        table.check_for_button() and \
+                        table.get_round_number(history) and \
+                        table.check_for_checkbutton() and \
+                        table.init_get_other_players_info() and \
+                        table.get_other_player_status(strategy, history) and \
+                        table.get_other_player_names(strategy) and \
+                        table.get_other_player_funds(strategy) and \
+                        table.get_total_pot_value(history) and \
+                        table.get_round_pot_value(history) and \
+                        table.check_for_call() and \
+                        table.check_for_betbutton() and \
+                        table.check_for_allincall() and \
+                        table.get_current_call_value(strategy) and \
+                        table.get_current_bet_value(strategy)
 
             if not self.gui_signals.pause_thread:
-                config = ConfigObj("config.ini")
-                m = run_montecarlo_wrapper(p, self.gui_signals, config, ui, t, self.game_logger, preflop_state, h)
-                d = Decision(t, h, p, self.game_logger)
-                d.make_decision(t, h, p, self.logger, self.game_logger)
+                config = ConfigObj(CONFIG_FILENAME)
+                m = run_montecarlo_wrapper(strategy, self.gui_signals, config, ui, table, self.game_logger,
+                                           preflop_state, history)
+                self.gui_signals.signal_progressbar_increase.emit(20)
+                d = Decision(table, history, strategy, self.game_logger)
+                d.make_decision(table, history, strategy, self.game_logger)
+                self.gui_signals.signal_progressbar_increase.emit(10)
                 if self.gui_signals.exit_thread: sys.exit()
 
-                self.update_most_gui_items(preflop_state, p, m, t, d, h, self.gui_signals)
+                self.update_most_gui_items(preflop_state, strategy, m, table, d, history, self.gui_signals)
 
-                self.logger.info(
-                    "Equity: " + str(t.equity * 100) + "% -> " + str(int(t.assumedPlayers)) + " (" + str(
-                        int(t.other_active_players)) + "-" + str(int(t.playersAhead)) + "+1) Plr")
-                self.logger.info("Final Call Limit: " + str(d.finalCallLimit) + " --> " + str(t.minCall))
-                self.logger.info("Final Bet Limit: " + str(d.finalBetLimit) + " --> " + str(t.minBet))
-                self.logger.info(
-                    "Pot size: " + str((t.totalPotValue)) + " -> Zero EV Call: " + str(round(d.maxCallEV, 2)))
-                self.logger.info("+++++++++++++++++++++++ Decision: " + str(d.decision) + "+++++++++++++++++++++++")
+                log.info(
+                    "Equity: " + str(table.equity * 100) + "% -> " + str(int(table.assumedPlayers)) + " (" + str(
+                        int(table.other_active_players)) + "-" + str(int(table.playersAhead)) + "+1) Plr")
+                log.info("Final Call Limit: " + str(d.finalCallLimit) + " --> " + str(table.minCall))
+                log.info("Final Bet Limit: " + str(d.finalBetLimit) + " --> " + str(table.minBet))
+                log.info(
+                    "Pot size: " + str((table.totalPotValue)) + " -> Zero EV Call: " + str(round(d.maxCallEV, 2)))
+                log.info("+++++++++++++++++++++++ Decision: " + str(d.decision) + "+++++++++++++++++++++++")
 
                 mouse_target = d.decision
-                if mouse_target == 'Call' and t.allInCallButton:
+                if mouse_target == 'Call' and table.allInCallButton:
                     mouse_target = 'Call2'
-                mouse.mouse_action(mouse_target, t.tlc)
+                mouse.mouse_action(mouse_target, table.tlc)
 
-                t.time_action_completed = datetime.datetime.utcnow()
+                table.time_action_completed = datetime.datetime.utcnow()
 
-                filename = str(h.GameID) + "_" + str(t.gameStage) + "_" + str(h.round_number) + ".png"
-                self.logger.debug("Saving screenshot: " + filename)
-                pil_image = t.crop_image(t.entireScreenPIL, t.tlc[0], t.tlc[1], t.tlc[0] + 950, t.tlc[1] + 650)
+                filename = str(history.GameID) + "_" + str(table.gameStage) + "_" + str(history.round_number) + ".png"
+                log.debug("Saving screenshot: " + filename)
+                pil_image = table.crop_image(table.entireScreenPIL, table.tlc[0], table.tlc[1], table.tlc[0] + 950,
+                                             table.tlc[1] + 650)
                 pil_image.save("log/screenshots/" + filename)
 
                 self.gui_signals.signal_status.emit("Logging data")
 
-                t_log_db = threading.Thread(name='t_log_db', target=self.game_logger.write_log_file, args=[p, h, t, d])
+                t_log_db = threading.Thread(name='t_log_db', target=self.game_logger.write_log_file,
+                                            args=[strategy, history, table, d])
                 t_log_db.daemon = True
                 t_log_db.start()
-                # self.game_logger.write_log_file(p, h, t, d)
+                # self.game_logger.write_log_file(strategy, history, table, d)
 
-                h.previousPot = t.totalPotValue
-                h.histGameStage = t.gameStage
-                h.histDecision = d.decision
-                h.histEquity = t.equity
-                h.histMinCall = t.minCall
-                h.histMinBet = t.minBet
-                h.hist_other_players = t.other_players
-                h.first_raiser = t.first_raiser
-                h.first_caller = t.first_caller
-                h.previous_decision = d.decision
-                h.lastRoundGameID = h.GameID
-                h.previous_round_pot_value=t.round_pot_value
-                h.last_round_bluff = False if t.currentBluff == 0 else True
-                if t.gameStage == 'PreFlop':
-                    preflop_state.update_values(t, d.decision, h, d)
-                self.logger.info("=========== round end ===========")
+                history.previousPot = table.totalPotValue
+                history.histGameStage = table.gameStage
+                history.histDecision = d.decision
+                history.histEquity = table.equity
+                history.histMinCall = table.minCall
+                history.histMinBet = table.minBet
+                history.hist_other_players = table.other_players
+                history.first_raiser = table.first_raiser
+                history.first_caller = table.first_caller
+                history.previous_decision = d.decision
+                history.lastRoundGameID = history.GameID
+                history.previous_round_pot_value = table.round_pot_value
+                history.last_round_bluff = False if table.currentBluff == 0 else True
+                if table.gameStage == 'PreFlop':
+                    preflop_state.update_values(table, d.decision, history, d)
+                mongo.increment_plays(table_scraper_name)
+                log.info("=========== round end ===========")
 
 
 # ==== MAIN PROGRAM =====
 
 def run_poker():
-    fh = logging.handlers.RotatingFileHandler('log/pokerprogram.log', maxBytes=1000000, backupCount=10)
-    fh.setLevel(logging.DEBUG)
-    fh2 = logging.handlers.RotatingFileHandler('log/pokerprogram_info_only.log', maxBytes=1000000, backupCount=5)
-    fh2.setLevel(logging.INFO)
-    er = logging.handlers.RotatingFileHandler('log/errors.log', maxBytes=2000000, backupCount=2)
-    er.setLevel(logging.WARNING)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.WARNING)
-    fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    fh2.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    er.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    ch.setFormatter(logging.Formatter('%(name)s - %(levelname)s - %(message)s'))
+    init_logger(screenlevel=logging.INFO, filename='deepmind_pokerbot', logdir='log')
+    # print(f"Screenloglevel: {screenloglevel}")
+    log = logging.getLogger("")
+    log.info("Initializing program")
 
-    root = logging.getLogger()
-    root.addHandler(fh)
-    root.addHandler(fh2)
-    root.addHandler(ch)
-    root.addHandler(er)
-
-    print(
-        "This is a testversion and error messages will appear here. The user interface has opened in a separate window.")
     # Back up the reference to the exceptionhook
     sys._excepthook = sys.excepthook
-    global u
-    u = UpdateChecker()
-    u.check_update(version)
-
+    log.info("Check for auto-update")
+    updater = UpdateChecker()
+    updater.check_update(version)
+    log.info(f"Lastest version already installed: {version}")
 
     def exception_hook(exctype, value, traceback):
         # Print the error and traceback
         logger = logging.getLogger('main')
-        logger.setLevel(logging.DEBUG)
         print(exctype, value, traceback)
         logger.error(str(exctype))
         logger.error(str(value))
@@ -259,43 +267,25 @@ def run_poker():
         sys.__excepthook__(exctype, value, traceback)
         sys.exit(1)
 
-
     # Set the exception hook to our wrapping function
     sys.__excepthook__ = exception_hook
 
-    # check for tesseract
-    try:
-        pytesseract.image_to_string(Image.open('pics/PP/call.png'))
-    except Exception as e:
-        print(e)
-        print(
-            "Tesseract not installed. Please install it into the same folder as the pokerbot or alternatively set the path variable.")
-        # subprocess.call(["start", 'tesseract-installer/tesseract-ocr-setup-3.05.00dev.exe'], shell=True)
-        sys.exit()
-
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
+    global ui  # pylint: disable=global-statement
+    ui = UiPokerbot()
+    ui.setWindowIcon(QtGui.QIcon('gui/ui/icon.ico'))
 
-    global ui
-    ui= Ui_Pokerbot()
-    ui.setupUi(MainWindow)
-    MainWindow.setWindowIcon(QtGui.QIcon('icon.ico'))
-
-    global gui_signals
     gui_signals = UIActionAndSignals(ui)
 
-    t1 = ThreadManager(1, "Thread-1", 1, gui_signals)
+    t1 = ThreadManager(1, "Thread-1", 1, gui_signals, updater)
     t1.start()
 
-    MainWindow.show()
     try:
         sys.exit(app.exec_())
     except:
         print("Preparing to exit...")
         gui_signals.exit_thread = True
 
-
-    pass
 
 if __name__ == '__main__':
     run_poker()

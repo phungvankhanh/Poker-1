@@ -1,13 +1,12 @@
-import numpy as np
 import itertools as iter
 import logging
 
+# pylint: disable=consider-using-enumerate,unused-variable
 
-class Outs_Calculator(object):
+class Outs_Calculator:
     def __init__(self):
         self.logger = logging.getLogger('out_calc')
         self.logger.setLevel(logging.DEBUG)
-
 
         self.gut_shot_straight = False  # get_gut_shot_straight_draw
         self.open_straight = False  # get_open_straight_draw
@@ -21,7 +20,7 @@ class Outs_Calculator(object):
         values = "23456789TJQKA"
         suites = "CDHS"
         oc.deck = []
-        [oc.deck.append(x + y) for x in values for y in suites]
+        _ = [oc.deck.append(x + y) for x in values for y in suites]
         # remove drawn cards
         oc.deck = [elem for elem in oc.deck if elem not in oc.hand]
         return oc.deck
@@ -68,14 +67,14 @@ class Outs_Calculator(object):
                     if suits.count(flushSuit) >= 5:
                         break
 
-                flushHand = [k for k in hand if flushSuit in k]
+                flushHand = [k for k in hand if flushSuit in k]  # pylint: disable=undefined-loop-variable
                 rcountsFlush = {card_ranks_original.find(r): ''.join(flushHand).count(r) for r, _ in flushHand}.items()
                 score, card_ranks = zip(*sorted((cnt, rank) for rank, cnt in rcountsFlush)[::-1])
                 card_ranks = tuple(
                     sorted(card_ranks, reverse=True))  # ignore original sorting where pairs had influence
 
                 # check for straight in flush
-                if 12 in card_ranks and not -1 in card_ranks:  # adjust if 5 high straight
+                if 12 in card_ranks and -1 not in card_ranks:  # adjust if 5 high straight
                     card_ranks += (-1,)
                 for i in range(len(card_ranks) - 4):
                     straight = card_ranks[i] - card_ranks[i + 4] == 4
@@ -149,7 +148,7 @@ class Outs_Calculator(object):
             self.get_gut_shot_straight_draw
         ]
 
-        #print(len(outs_rank))
+        # print(len(outs_rank))
 
         for i in range(0, len(outs_rank)):
             outs = outs_list[i] = outs_rank[i](oc)
@@ -186,7 +185,7 @@ class Outs_Calculator(object):
 
         if straight_outs == 4:
             outs = 4
-            #if boardFlush: outs -= 1
+            # if boardFlush: outs -= 1
             self.gut_shot_straight = True
         else:
             self.gut_shot_straight = False
@@ -212,7 +211,7 @@ class Outs_Calculator(object):
         if straight_outs == 8:
             self.open_straight = True
             outs = 8
-            #if boardFlush: outs -= 1
+            # if boardFlush: outs -= 1
         else:
             outs = 0
             self.open_straight = False
@@ -230,14 +229,13 @@ class Outs_Calculator(object):
             suits.count(flushSuit)
             if suits.count(flushSuit) == 4:
                 outs = 9
-                #if boardFlush: outs -= 1
+                # if boardFlush: outs -= 1
                 self.flush_draw = True
                 break
             else:
                 outs = 0
                 self.flush_draw = False
         return outs
-
 
     # Inside Straight and Flush // Open Straight and Flush
     def get_straight_flush_draw(self, oc):
@@ -269,18 +267,18 @@ class Outs_Calculator(object):
 
             straight_draw, straight_outs = self.check_straight(hand_list, ghost_card, straight_outs)
 
-        if straight_outs == 8 or straight_outs == 4:
+        if straight_outs == 8 or straight_outs == 4:  # pylint: disable=consider-using-in
             straight_draw = True
 
         if self.flush_draw and straight_draw:
             if straight_outs == 4:
                 outs = 12
-                #if boardFlush: outs -= 1
+                # if boardFlush: outs -= 1
                 self.gut_shot_and_flush = True
                 self.open_straight_and_flush = False
             elif straight_outs == 8:
                 outs = 15
-                #if boardFlush: outs -= 1
+                # if boardFlush: outs -= 1
                 self.open_straight_and_flush = True
                 self.gut_shot_and_flush = False
             else:
