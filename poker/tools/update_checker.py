@@ -2,7 +2,11 @@ import subprocess
 import sys
 
 import requests
-from pymongo import MongoClient
+
+from poker.tools.helper import get_config
+
+config = get_config()
+URL = config.config.get('main', 'db')
 
 
 class UpdateChecker:
@@ -11,8 +15,6 @@ class UpdateChecker:
         self.preflop_url_backup = 'decisionmaker/preflop.xlsx'
         self.file_name = "Pokerbot_installer.exe"
         self.dl_link = ""
-        self.mongoclient = MongoClient('mongodb://neuron_poker:donald@dickreuter.com/neuron_poker')
-        self.mongodb = self.mongoclient.neuron_poker
 
     def downloader(self):
         with open(self.file_name, "wb") as f:
@@ -29,28 +31,34 @@ class UpdateChecker:
                     dl += len(data)
                     f.write(data)
                     done = int(50 * dl / total_length)
-                    sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50 - done)))
+                    sys.stdout.write("\r[%s%s]" %
+                                     ('=' * done, ' ' * (50 - done)))
                     sys.stdout.flush()
 
     def check_update(self, version):
-        cursor = self.mongodb.internal.find()
-        c = cursor.next()
+        c = requests.post(URL + "get_internal").json()[0]
         current_version = c['current_version']
         self.dl_link = c['dl']
         latest_updates = c['latest_updates']
+
         if current_version > version:
-            print("Downloading latest version of the DeepMind Pokerbot...")
-            print("\n")
-            print("Version changes:")
-            for latest_update in latest_updates:
-                print("* " + latest_update)
-            print("\n")
-            self.downloader()
-            subprocess.call(["start", self.file_name], shell=True)
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                print("Downloading latest version of the DeepMind Pokerbot...")
+                print("\n")
+                print("Version changes:")
+                for latest_update in latest_updates:
+                    print("* " + latest_update)
+                print("\n")
+                self.downloader()
+                subprocess.call(["start", self.file_name], shell=True)
+            else:
+                print(
+                    "Please get the latest version by either updating your repo or by downloading the latest binaries. "
+                    "\nThis version is out of date and may not work correcly or you may be missing important updates"
+                    " to ensure the bot plays the best possible strategy.")
             sys.exit()
 
     def get_preflop_sheet_url(self):
-        cursor = self.mongodb.internal.find()
-        c = cursor.next()
+        c = requests.post(URL + "get_internal").json()[0]
         self.preflop_url = c['preflop_url']
         return self.preflop_url, self.preflop_url_backup

@@ -1,9 +1,11 @@
 """Recognize table"""
 import logging
 
+from poker.scraper.table_scraper_nn import predict
+from poker.scraper.table_setup_actions_and_signals import CARD_SUITES, CARD_VALUES
+from poker.tools.helper import get_dir
 from poker.tools.screen_operations import take_screenshot, crop_screenshot_with_topleft_corner, \
     is_template_in_search_area, binary_pil_to_cv2, ocr
-from poker.scraper.table_setup_actions_and_signals import CARD_SUITES, CARD_VALUES
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ class TableScraper:
         self.table_dict = table_dict
         self.screenshot = None
 
-        self.total_players = 6
+        self.total_players = 6 if not 'total_players' in self.table_dict else self.table_dict['total_players']
         self.my_cards = None
         self.table_cards = None
         self.current_round_pot = None
@@ -49,19 +51,61 @@ class TableScraper:
         return is_template_in_search_area(self.table_dict, self.screenshot,
                                           'im_back', 'buttons_search_area')
 
+    def resume_hand(self):
+        """Check if I'm back button is visible"""
+        return is_template_in_search_area(self.table_dict, self.screenshot,
+                                          'resume_hand', 'buttons_search_area')
+
     def get_my_cards2(self):
         """Get my cards"""
         self.my_cards = []
-        for value in CARD_VALUES:
-            for suit in CARD_SUITES:
-                if is_template_in_search_area(self.table_dict, self.screenshot,
-                                              value.lower() + suit.lower(), 'my_cards_area'):
-                    self.my_cards.append(value + suit)
+
+        if 'use_neural_network' in self.table_dict and self.table_dict['use_neural_network'] == '2':
+            self.get_my_cards_nn()
+        else:
+            for value in CARD_VALUES:
+                for suit in CARD_SUITES:
+                    if is_template_in_search_area(self.table_dict, self.screenshot,
+                                                  value.lower() + suit.lower(), 'my_cards_area', extended=True):
+                        self.my_cards.append(value + suit)
 
         if len(self.my_cards) != 2:
             log.warning("My cards not recognized")
         log.info(f"My cards: {self.my_cards}")
-        return True
+
+    def get_my_cards_nn(self):
+        left_card_area = self.table_dict['left_card_area']
+        right_card_area = self.table_dict['right_card_area']
+        left_card = self.screenshot.crop(
+            (left_card_area['x1'], left_card_area['y1'], left_card_area['x2'], left_card_area['y2']))
+        right_card = self.screenshot.crop(
+            (right_card_area['x1'], right_card_area['y1'], right_card_area['x2'], right_card_area['y2']))
+        self.my_cards = []
+
+        card1 = predict(left_card, self.nn_model, self.table_dict['_class_mapping'])
+        card2 = predict(right_card, self.nn_model, self.table_dict['_class_mapping'])
+        self.my_cards.append(card1)
+        self.my_cards.append(card2)
+
+        try:
+            left_card.save(get_dir('log') + '/pics/' + card1 + '.png')
+        except:
+            pass
+        try:
+            right_card.save(get_dir('log') + '/pics/' + card2 + '.png')
+        except:
+            pass
+
+        for i in range(2):
+            if 'empty_card' in self.my_cards:
+                self.my_cards.remove('empty_card')
+
+        if len(self.my_cards) == 2:
+            log.info("My cards: " + str(self.my_cards))
+            return True
+        else:
+            log.debug("Did not find two player cards: " + str(self.my_cards))
+            return False
 
     def get_table_cards2(self):
         """Get the cards on the table"""
@@ -72,8 +116,10 @@ class TableScraper:
                                               value.lower() + suit.lower(), 'table_cards_area'):
                     self.table_cards.append(value + suit)
         log.info(f"Table cards: {self.table_cards}")
-        assert len(self.table_cards) != 1, "Table cards can never be 1"
-        assert len(self.table_cards) != 2, "Table cards can never be 2"
+        if len(self.table_cards) == 1 or len(self.table_cards) == 2:
+            log.warning(f"Only recognized {len(self.table_cards)} cards on the table. "
+                        f"This can happen if cards are sliding in or if some of the templates are wrong")
+            return False
         return True
 
     def get_dealer_position2(self):  # pylint: disable=inconsistent-return-statements
@@ -141,7 +187,7 @@ class TableScraper:
 
     def get_pots(self):
         """Get current and total pot"""
-        self.current_round_pot = ocr(self.screenshot, 'current_round_pot', self.table_dict)
+        self.current_round_pot = ocr(self.screenshot, 'current_round_pot', self.table_dict, fast=True)
         log.info(f"Current round pot {self.current_round_pot}")
         self.total_pot = ocr(self.screenshot, 'total_pot_area', self.table_dict)
         log.info(f"Total pot {self.total_pot}")
@@ -173,6 +219,13 @@ class TableScraper:
         log.info(f"Raise button found: {self.raise_button}")
         return self.raise_button
 
+    def has_bet_button(self):
+        """Check if bet button is present"""
+        self.bet_button = is_template_in_search_area(self.table_dict, self.screenshot,
+                                                     'bet_button', 'buttons_search_area')
+        log.info(f"Bet button found: {self.bet_button}")
+        return self.bet_button
+
     def has_check_button(self):
         """Check if check button is present"""
         self.check_button = is_template_in_search_area(self.table_dict, self.screenshot,
@@ -189,12 +242,18 @@ class TableScraper:
         """Read the call value from the call button"""
         self.call_value = ocr(self.screenshot, 'call_value', self.table_dict)
         log.info(f"Call value: {self.call_value}")
+        if round(self.call_value) >= 90:
+            log.warning("Correcting call value from >90")
+            self.call_value -= 90
         return self.call_value
 
     def get_raise_value(self):
         """Read the value of the raise button"""
         self.raise_value = ocr(self.screenshot, 'raise_value', self.table_dict)
         log.info(f"Raise value: {self.raise_value}")
+        if round(self.raise_value) >= 90:
+            log.warning("Correcting raise value from >90")
+            self.raise_value -= 90
         return self.raise_value
 
     def get_game_number_on_screen2(self):

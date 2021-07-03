@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import sys
+from time import sleep
 
 import cv2
 import numpy as np
@@ -17,11 +18,10 @@ log = logging.getLogger(__name__)
 is_debug = False  # used for saving images for debug purposes
 
 
-def find_template_on_screen(template, screenshot, threshold):
+def find_template_on_screen(template, screenshot, threshold, extended=False):
     """Find template on screen"""
     res = cv2.matchTemplate(screenshot, template, cv2.TM_SQDIFF_NORMED)
     loc = np.where(res <= threshold)
-    log.debug(f"Looking for template with threshold {threshold}")
     min_val, _, min_loc, _ = cv2.minMaxLoc(res)
 
     bestFit = min_loc
@@ -51,26 +51,26 @@ def get_table_template_image(table_name='default', label='topleft_corner'):
     return template_cv2
 
 
-def get_ocr_float(img_orig):
+def get_ocr_float(img_orig, fast=False):
     """Return float value from image. -1.0f when OCR failed"""
-    return get_ocr_number(img_orig)
+    return get_ocr_number(img_orig, fast)
 
 
 def prepareImage(img_orig, binarize=True):
     """Prepare image for OCR"""
 
     def binarize_array_opencv(image):
-        """Binarize image from gray channel with 80 as threshold"""
+        """Binarize image from gray channel with 76 as threshold"""
         img = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        _, thresh2 = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
+        _, thresh2 = cv2.threshold(img, 76, 255, cv2.THRESH_BINARY_INV)
         return Image.fromarray(thresh2)
 
     basewidth = 300
     wpercent = (basewidth / float(img_orig.size[0]))
     hsize = int((float(img_orig.size[1]) * float(wpercent)))
-    img_resized = img_orig.convert('L').resize((basewidth, hsize), Image.ANTIALIAS)
+    img_resized = img_orig.convert('L').resize((basewidth, hsize), Image.LANCZOS)
     if binarize:
         img_resized = binarize_array_opencv(img_resized)
 
@@ -91,19 +91,21 @@ def prepareImage(img_orig, binarize=True):
     return img_resized
 
 
-def get_ocr_number(img_orig):
+def get_ocr_number(img_orig, fast=False):
     """Return float value from image. -1.0f when OCR failed"""
     img_resized = prepareImage(img_orig)
     lst = []
-    config_ocr = '--psm 7 --oem 1 -c tessedit_char_whitelist=0123456789.$£B'
+    config_ocr = '--psm 7 --oem 1 -c tessedit_char_whitelist=0123456789.,$£B'
 
     lst.append(
         pytesseract.image_to_string(img_resized, 'eng', config=config_ocr).
-            strip().replace('$', '').replace('£', '').replace('B', ''))
+            strip().replace('$', '').replace('£', '').replace('B', '').replace(',', '.'))
 
     try:
         return float(lst[-1])
     except ValueError:
+        if fast:
+            return -1
         images = [img_orig, img_resized]  # , img_min, img_mod, img_med, img_sharp]
         i = 0
         while i < 2:
@@ -171,11 +173,13 @@ def crop_screenshot_with_topleft_corner(original_screenshot, topleft_corner):
         log.debug(f"Found to left corner at {tlc}")
         cropped_screenshot = original_screenshot.crop((tlc[0], tlc[1], tlc[0] + 1600, tlc[1] + 1200))
         return cropped_screenshot, tlc
-    elif count >1:
-        log.warning("Multiple top left corners found. That doesn't work unfortunately at this point. Make sure only one table is visible.")
+    elif count > 1:
+        log.warning(
+            "Multiple top left corners found. That doesn't work unfortunately at this point. Make sure only one table is visible.")
         return None, None
     else:
         log.warning("No top left corner found")
+        sleep(5)
         return None, None
 
 
@@ -191,24 +195,32 @@ def cv2_to_pil(img):
     return Image.fromarray(img)
 
 
-def check_if_image_in_range(img, screenshot, x1, y1, x2, y2):
+def rotate_image(image, angle):
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+    return result
+
+
+def check_if_image_in_range(img, screenshot, x1, y1, x2, y2, extended=False):
     cropped_screenshot = screenshot.crop((x1, y1, x2, y2))
     cropped_screenshot = pil_to_cv2(cropped_screenshot)
-    count, _, _, _ = find_template_on_screen(img, cropped_screenshot, 0.01)
+    count, _, _, _ = find_template_on_screen(img, cropped_screenshot, 0.01, extended=extended)
     return count >= 1
 
 
-def is_template_in_search_area(table_dict, screenshot, image_name, image_area, player=None):
+def is_template_in_search_area(table_dict, screenshot, image_name, image_area, player=None, extended=False):
     template_cv2 = binary_pil_to_cv2(table_dict[image_name])
     if player:
         search_area = table_dict[image_area][player]
     else:
         search_area = table_dict[image_area]
     return check_if_image_in_range(template_cv2, screenshot,
-                                   search_area['x1'], search_area['y1'], search_area['x2'], search_area['y2'])
+                                   search_area['x1'], search_area['y1'], search_area['x2'], search_area['y2'],
+                                   extended=extended)
 
 
-def ocr(screenshot, image_area, table_dict, player=None):
+def ocr(screenshot, image_area, table_dict, player=None, fast=False):
     """
     get ocr of area of screenshot
 
@@ -233,4 +245,4 @@ def ocr(screenshot, image_area, table_dict, player=None):
     else:
         search_area = table_dict[image_area]
     cropped_screenshot = screenshot.crop((search_area['x1'], search_area['y1'], search_area['x2'], search_area['y2']))
-    return get_ocr_float(cropped_screenshot)
+    return get_ocr_float(cropped_screenshot, fast)

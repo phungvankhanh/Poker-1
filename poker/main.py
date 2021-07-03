@@ -9,22 +9,23 @@ from sys import platform
 import matplotlib
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtGui, QtWidgets
 
 if platform not in ["linux", "linux2"]:
     matplotlib.use('Qt5Agg')
-from configobj import ConfigObj
-from poker.tools.game_logger import GameLogger
-from poker.tools.helper import init_logger, CONFIG_FILENAME
-from poker.tools.update_checker import UpdateChecker
-from poker.tools.mouse_mover import MouseMoverTableBased
-from poker.tools.mongo_manager import MongoManager
-from poker.gui.main_window import UiPokerbot
-from poker.gui.action_and_signals import UIActionAndSignals, StrategyHandler
-from poker.scraper.table_screen_based import TableScreenBased
-from poker.decisionmaker.current_hand_memory import History, CurrentHandPreflopState
-from poker.decisionmaker.montecarlo_python import run_montecarlo_wrapper
+
+from poker.decisionmaker.current_hand_memory import (CurrentHandPreflopState,
+                                                     History)
 from poker.decisionmaker.decisionmaker import Decision
+from poker.decisionmaker.montecarlo_python import run_montecarlo_wrapper
+from poker.gui.action_and_signals import StrategyHandler, UIActionAndSignals
+from poker.gui.gui_launcher import UiPokerbot
+from poker.scraper.table_screen_based import TableScreenBased
+from poker.tools.game_logger import GameLogger
+from poker.tools.helper import init_logger, get_config, get_dir
+from poker.tools.mongo_manager import MongoManager
+from poker.tools.mouse_mover import MouseMoverTableBased
+from poker.tools.update_checker import UpdateChecker
 
 # pylint: disable=no-member,simplifiable-if-expression,protected-access
 
@@ -35,7 +36,7 @@ warnings.filterwarnings("ignore", message="All-NaN axis encountered")
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-version = 4.41
+version = 6.26
 ui = None
 
 
@@ -87,8 +88,8 @@ class ThreadManager(threading.Thread):
         gui_signals.signal_label_number_update.emit('mycards', str(t.mycards))
         gui_signals.signal_label_number_update.emit('tablecards', str(t.cardsOnTable))
         gui_signals.signal_label_number_update.emit('opponent_range', str(_range) + str(range2))
-        gui_signals.signal_label_number_update.emit('mincallequity', str(np.round(t.minEquityCall, 2) * 100) + "%")
-        gui_signals.signal_label_number_update.emit('minbetequity', str(np.round(t.minEquityBet, 2) * 100) + "%")
+        gui_signals.signal_label_number_update.emit('mincallequity', str(np.round(t.minEquityCall*100, 2)) + "%")
+        gui_signals.signal_label_number_update.emit('minbetequity', str(np.round(t.minEquityBet*100, 2)) + "%")
         gui_signals.signal_label_number_update.emit('outs', str(d.outs))
         gui_signals.signal_label_number_update.emit('initiative', str(t.other_player_has_initiative))
         gui_signals.signal_label_number_update.emit('round_pot', str(np.round(t.round_pot_value, 2)))
@@ -135,11 +136,6 @@ class ThreadManager(threading.Thread):
 
         while True:
             # reload table if changed
-            config = ConfigObj(CONFIG_FILENAME)
-            if table_scraper_name != config['table_scraper_name']:
-                table_scraper_name = config['table_scraper_name']
-                log.info(f"Loading table scraper info for {table_scraper_name}")
-                table_dict = mongo.get_table(table_scraper_name)
 
             if self.gui_signals.pause_thread:
                 while self.gui_signals.pause_thread:
@@ -149,8 +145,21 @@ class ThreadManager(threading.Thread):
 
             ready = False
             while not ready:
-                strategy.read_strategy()
-                table = TableScreenBased(strategy, table_dict, self.gui_signals, self.game_logger, version)
+                config = get_config()
+                if table_scraper_name != config.config.get('main','table_scraper_name'):
+                    table_scraper_name = config.config.get('main','table_scraper_name')
+                    log.info(f"Loading table scraper info for {table_scraper_name}")
+                    table_dict = mongo.get_table(table_scraper_name)
+                    nn_model = None
+                    slow_table = False
+                    if 'use_neural_network' in table_dict and table_dict['use_neural_network'] == '2':
+                        from tensorflow.keras.models import model_from_json
+                        nn_model = model_from_json(table_dict['_model'])
+                        mongo.load_table_nn_weights(table_scraper_name)
+                        nn_model.load_weights(get_dir('codebase') + '/loaded_model.h5')
+                        slow_table = True
+
+                table = TableScreenBased(strategy, table_dict, self.gui_signals, self.game_logger, version, nn_model)
                 mouse = MouseMoverTableBased(table_dict)
                 mouse.move_mouse_away_from_buttons_jump()
 
@@ -159,13 +168,16 @@ class ThreadManager(threading.Thread):
                         table.check_for_captcha(mouse) and \
                         table.get_lost_everything(history, table, strategy, self.gui_signals) and \
                         table.check_for_imback(mouse) and \
-                        table.get_my_cards(history) and \
+                        table.check_for_resume_hand(mouse) and \
+                        table.check_for_button_if_slow_table(slow_table) and \
+                        table.get_my_cards() and \
                         table.get_new_hand(mouse, history, strategy) and \
                         table.get_table_cards(history) and \
                         table.upload_collusion_wrapper(strategy, history) and \
                         table.get_dealer_position() and \
                         table.check_fast_fold(history, strategy, mouse) and \
                         table.check_for_button() and \
+                        strategy.read_strategy() and \
                         table.get_round_number(history) and \
                         table.check_for_checkbutton() and \
                         table.init_get_other_players_info() and \
@@ -181,7 +193,7 @@ class ThreadManager(threading.Thread):
                         table.get_current_bet_value(strategy)
 
             if not self.gui_signals.pause_thread:
-                config = ConfigObj(CONFIG_FILENAME)
+                config = get_config()
                 m = run_montecarlo_wrapper(strategy, self.gui_signals, config, ui, table, self.game_logger,
                                            preflop_state, history)
                 self.gui_signals.signal_progressbar_increase.emit(20)
@@ -198,20 +210,30 @@ class ThreadManager(threading.Thread):
                 log.info("Final Call Limit: " + str(d.finalCallLimit) + " --> " + str(table.minCall))
                 log.info("Final Bet Limit: " + str(d.finalBetLimit) + " --> " + str(table.minBet))
                 log.info(
-                    "Pot size: " + str((table.totalPotValue)) + " -> Zero EV Call: " + str(round(d.maxCallEV, 2)))
+                    "Pot size: " + str(table.totalPotValue) + " -> Zero EV Call: " + str(round(d.maxCallEV, 2)))
                 log.info("+++++++++++++++++++++++ Decision: " + str(d.decision) + "+++++++++++++++++++++++")
 
                 mouse_target = d.decision
+                action_options = {}
+
                 if mouse_target == 'Call' and table.allInCallButton:
                     mouse_target = 'Call2'
-                mouse.mouse_action(mouse_target, table.tlc)
+                elif mouse_target == 'BetPlus':
+                    action_options['increases_num'] = strategy.selected_strategy['BetPlusInc']
+
+                mouse.mouse_action(mouse_target, table.tlc, action_options)
+
+                # for pokerstars, high fold straight after all in call (fold button matches the stay in game)
+                if mouse_target == 'Call2' and table.allInCallButton:
+                    mouse_target = 'Fold'
+                    mouse.mouse_action(mouse_target, table.tlc, action_options)
 
                 table.time_action_completed = datetime.datetime.utcnow()
 
                 filename = str(history.GameID) + "_" + str(table.gameStage) + "_" + str(history.round_number) + ".png"
                 log.debug("Saving screenshot: " + filename)
                 pil_image = table.crop_image(table.entireScreenPIL, table.tlc[0], table.tlc[1], table.tlc[0] + 950,
-                                             table.tlc[1] + 650)
+                                             table.tlc[1] + 700)
                 pil_image.save("log/screenshots/" + filename)
 
                 self.gui_signals.signal_status.emit("Logging data")

@@ -1,17 +1,12 @@
 import logging
-import re
 import sys
 import time
 
-import cv2  # opencv 3.0
 import numpy as np
-import pytesseract
-from PIL import Image, ImageFilter
-from configobj import ConfigObj
 
 from poker.decisionmaker.genetic_algorithm import GeneticAlgorithm
 from poker.scraper.table_scraper import TableScraper
-from poker.tools.helper import CONFIG_FILENAME
+from poker.tools.helper import get_config
 from poker.tools.vbox_manager import VirtualBoxController
 
 
@@ -19,13 +14,14 @@ from poker.tools.vbox_manager import VirtualBoxController
 
 class Table(TableScraper):
     # General tools that are used to operate the pokerbot and are valid for all tables
-    def __init__(self, p, table_dict, gui_signals, game_logger, version):
+    def __init__(self, p, table_dict, gui_signals, game_logger, version, nn_model=None):
         self.version = version
         self.ip = ''
         self.logger = logging.getLogger('table')
         self.logger.setLevel(logging.DEBUG)
         self.gui_signals = gui_signals
         self.game_logger = game_logger
+        self.nn_model = nn_model
         super().__init__(table_dict)
 
     def take_screenshot(self, initial, p):
@@ -39,8 +35,8 @@ class Table(TableScraper):
                     if self.gui_signals.exit_thread == True: sys.exit()
 
         time.sleep(0.1)
-        config = ConfigObj(CONFIG_FILENAME)
-        control = config['control']
+        config = get_config()
+        control = config.config.get('main', 'control')
         if control == 'Direct mouse control':
             self.take_screenshot2()
             self.entireScreenPIL = self.screenshot
@@ -58,156 +54,8 @@ class Table(TableScraper):
 
         self.gui_signals.signal_status.emit(str(p.current_strategy))
         self.gui_signals.signal_progressbar_increase.emit(5)
+        self.logger.info("Screenshot taken")
         return True
-
-    def find_template_on_screen(self, template, screenshot, threshold):
-        # 'cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-        # 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
-        method = eval('cv2.TM_SQDIFF_NORMED')  # pylint: disable=eval-used
-        # Apply template Matching
-        res = cv2.matchTemplate(screenshot, template, method)
-        loc = np.where(res <= threshold)
-
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
-        # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-        if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-            bestFit = min_loc
-        else:
-            bestFit = max_loc
-
-        count = 0
-        points = []
-        for pt in zip(*loc[::-1]):
-            # cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
-            count += 1
-            points.append(pt)
-        # plt.subplot(121),plt.imshow(res)
-        # plt.subplot(122),plt.imshow(img,cmap = 'jet')
-        # plt.imshow(img, cmap = 'gray', interpolation = 'bicubic')
-        # plt.show()
-        return count, points, bestFit, min_val
-
-    def get_ocr_float(self, img_orig, name, force_method=0, binarize=False):
-        def binarize_array(image, threshold=200):
-            """Binarize a numpy array."""
-            numpy_array = np.array(image)
-            for i in range(len(numpy_array)):  # pylint: disable=consider-using-enumerate
-                for j in range(len(numpy_array[0])):
-                    if numpy_array[i][j] > threshold:
-                        numpy_array[i][j] = 255
-                    else:
-                        numpy_array[i][j] = 0
-            return Image.fromarray(numpy_array)
-
-        def fix_number(t, force_method):
-            t = t.replace("I", "1").replace("Â°lo", "").replace("O", "0").replace("o", "0") \
-                .replace("-", ".").replace("D", "0").replace("I", "1").replace("_", ".").replace("-", ".") \
-                .replace("B", "8").replace("..", ".")
-            t = re.sub("[^0123456789\.]", "", t)  # pylint: disable=anomalous-backslash-in-string
-            try:
-                if t[0] == ".": t = t[1:]
-            except:
-                pass
-            try:
-                if t[-1] == ".": t = t[0:-1]
-            except:
-                pass
-            try:
-                if t[-1] == ".": t = t[0:-1]
-            except:
-                pass
-            try:
-                if t[-1] == "-": t = t[0:-1]
-            except:
-                pass
-            if force_method == 1:
-                try:
-                    t = re.findall(r'\d{1,3}\.\d{1,2}', str(t))[0]
-                except:
-                    t = ''
-                if t == '':
-                    try:
-                        t = re.findall(r'\d{1,3}', str(t))[0]
-                    except:
-                        t = ''
-
-            return t
-
-        try:
-            img_orig.save('pics/ocr_debug_' + name + '.png')
-        except:
-            self.logger.warning("Coulnd't safe debugging png file for ocr")
-
-        basewidth = 300
-        wpercent = (basewidth / float(img_orig.size[0]))
-        hsize = int((float(img_orig.size[1]) * float(wpercent)))
-        img_resized = img_orig.convert('L').resize((basewidth, hsize), Image.ANTIALIAS)
-        if binarize:
-            img_resized = binarize_array(img_resized, 200)
-
-        img_min = img_resized.filter(ImageFilter.MinFilter)
-        # img_med = img_resized.filter(ImageFilter.MedianFilter)
-        img_mod = img_resized.filter(ImageFilter.ModeFilter).filter(ImageFilter.SHARPEN)
-
-        lst = []
-        # try:
-        #    lst.append(pytesseract.image_to_string(img_orig, none, false,"-psm 6"))
-        # except exception as e:
-        #    self.logger.error(str(e))
-
-        if force_method == 0:
-            try:
-                lst.append(pytesseract.image_to_string(img_min, None, False, "-psm 6"))
-            except Exception as e:
-                self.logger.warning(str(e))
-                try:
-                    self.entireScreenPIL.save('pics/err_debug_fullscreen.png')
-                except:
-                    self.logger.warning("Coulnd't safe debugging png file for ocr")
-                    # try:
-                    #    lst.append(pytesseract.image_to_string(img_med, None, False, "-psm 6"))
-                    # except Exception as e:
-                    #    self.logger.error(str(e))
-
-        try:
-            if force_method == 1 or fix_number(lst[0], force_method=0) == '':
-                lst.append(pytesseract.image_to_string(img_mod, None, False, "-psm 6"))
-                lst.append(pytesseract.image_to_string(img_min, None, False, "-psm 6"))
-        except UnicodeDecodeError:
-            pass
-        except Exception as e:
-            self.logger.warning(str(e))
-            try:
-                self.entireScreenPIL.save('pics/err_debug_fullscreen.png')
-            except:
-                self.logger.warning("Coulnd't safe debugging png file for ocr")
-
-        try:
-            final_value = ''
-            for i, j in enumerate(lst):
-                try:
-                    self.logger.debug("OCR of " + name + " method {}: {} ".format(i, j))
-                except:
-                    self.logger.warning("OCR of " + name + " method failed")
-
-                lst[i] = fix_number(lst[i], force_method) if lst[i] != '' else lst[i]
-                final_value = lst[i] if final_value == '' else final_value
-
-            self.logger.info(name + " FINAL VALUE: " + str(final_value))
-            if final_value == '':
-                return ''
-            else:
-                return float(final_value)
-
-        except Exception as e:
-            self.logger.warning("Pytesseract Error in recognising " + name)
-            self.logger.warning(str(e))
-            try:
-                self.entireScreenPIL.save('pics/err_debug_fullscreen.png')
-            except:
-                pass
-            return ''
 
     def call_genetic_algorithm(self, p):
         self.gui_signals.signal_progressbar_increase.emit(5)
@@ -220,7 +68,6 @@ class Table(TableScraper):
         total_winnings = self.game_logger.get_strategy_return(p.current_strategy, 9999999)
 
         winnings_per_bb_100 = total_winnings / p.selected_strategy['bigBlind'] / n * 100 if n > 0 else 0
-
         self.logger.info("Total Strategy winnings: %s", total_winnings)
         self.logger.info("Winnings in BB per 100 hands: %s", np.round(winnings_per_bb_100, 2))
         self.gui_signals.signal_label_number_update.emit('winnings', str(np.round(winnings_per_bb_100, 2)))

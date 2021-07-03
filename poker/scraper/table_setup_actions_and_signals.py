@@ -7,9 +7,9 @@ from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
-from configobj import ConfigObj
 
-from poker.tools.helper import COMPUTER_NAME, CONFIG_FILENAME
+from poker.scraper.table_scraper_nn import TRAIN_FOLDER
+from poker.tools.helper import COMPUTER_NAME, get_config, get_dir
 from poker.tools.mongo_manager import MongoManager
 from poker.tools.screen_operations import get_table_template_image, get_ocr_float, take_screenshot, \
     crop_screenshot_with_topleft_corner
@@ -30,6 +30,7 @@ class TableSetupActionAndSignals(QObject):
     signal_update_screenshot_pic = pyqtSignal(object)
     signal_update_label = pyqtSignal(str, str)
     signal_flatten_button = pyqtSignal(str, bool)
+    signal_check_box = pyqtSignal(str, int)
 
     def __init__(self, ui):
         """Initial"""
@@ -59,6 +60,7 @@ class TableSetupActionAndSignals(QObject):
         self.signal_update_screenshot_pic.connect(self.update_screenshot_pic)
         self.signal_update_label.connect(self._update_label)
         self.signal_flatten_button.connect(self._flatten_button)
+        self.signal_check_box.connect(self._check_box)
         self.ui.screenshot_label.mousePressEvent = self.get_position
         self.ui.take_screenshot_button.clicked.connect(lambda: self.take_screenshot())
         # self.ui.take_screenshot_cropped_button.clicked.connect(lambda: self.take_screenshot_cropped())
@@ -69,15 +71,29 @@ class TableSetupActionAndSignals(QObject):
         self.ui.copy_to_new.clicked.connect(lambda: self.copy_to_new())
         self.ui.crop.clicked.connect(lambda: self.crop())
         self.ui.load.clicked.connect(lambda: self.load())
+        self.ui.train_model.clicked.connect(lambda: self.train_model())
         self.ui.button_delete.clicked.connect(lambda: self.delete())
         self.ui.tesseract.clicked.connect(lambda: self._recognize_number())
         self.ui.topleft_corner.clicked.connect(lambda: self.save_topleft_corner())
         self.ui.current_player.currentIndexChanged[str].connect(lambda: self._update_selected_player())
+        self.ui.use_neural_network.stateChanged[int].connect(lambda: self._save_use_nerual_network_checkbox())
 
     @pyqtSlot()
     def _update_selected_player(self):
         self.selected_player = self.ui.current_player.currentText()
         log.info(f"Updated selected player to {self.selected_player}")
+
+    def _save_use_nerual_network_checkbox(self):
+        owner = mongo.get_table_owner(self.table_name)
+        if owner != COMPUTER_NAME:
+            # pop_up("Not authorized.",
+            #        "You can only edit your own tables. Please create a new copy or start with a new blank table")
+            return
+        label = 'use_neural_network'
+        log.info("Saving use neural network tickbox")
+        is_set = self.ui.use_neural_network.checkState()
+        mongo.update_state(state=is_set, label=label, table_name=self.table_name)
+        log.info("Saving complete")
 
     def _connect_cards_with_save_slot(self):
         deck = []  # contains cards in the deck
@@ -90,13 +106,17 @@ class TableSetupActionAndSignals(QObject):
             button_show_property = getattr(self.ui, 'card_' + card + '_show')
             button_show_property.clicked.connect(lambda state, x=card: self.load_image(x))
 
-        save_image_buttons = ['call_button', 'raise_button', 'check_button', 'fold_button', 'fast_fold_button',
+        save_image_buttons = ['call_button', 'raise_button', 'bet_button', 'check_button', 'fold_button',
+                              'fast_fold_button',
                               'all_in_call_button',
                               'my_turn',
-                              'lost_everything', 'im_back', 'dealer_button', 'covered_card']
+                              'lost_everything', 'im_back', 'resume_hand', 'dealer_button', 'covered_card']
         for button in save_image_buttons:
             button_property = getattr(self.ui, button)
             button_property.clicked.connect(lambda state, x=button: self.save_image(x))
+
+            button_show_property = getattr(self.ui, button + '_show')
+            button_show_property.clicked.connect(lambda state, x=button: self.load_image(x))
 
         button_show_property = getattr(self.ui, 'dealer_button_show')
         button_show_property.clicked.connect(lambda state: self.load_image('dealer_button'))
@@ -111,7 +131,9 @@ class TableSetupActionAndSignals(QObject):
                          'mouse_fold', 'mouse_fast_fold', 'mouse_raise', 'mouse_full_pot', 'mouse_call',
                          'mouse_increase', 'mouse_call2', 'mouse_check',
                          'mouse_imback',
-                         'mouse_half_pot', 'mouse_all_in', 'buttons_search_area']
+                         'mouse_half_pot', 'mouse_all_in', 'mouse_resume_hand', 'buttons_search_area',
+                         'left_card_area', 'right_card_area'
+                         ]
 
         for button in range_buttons:
             button_property = getattr(self.ui, button)
@@ -175,6 +197,11 @@ class TableSetupActionAndSignals(QObject):
     def _flatten_button(self, label, checked):
         self.flatten_button(label, checked)
 
+    @pyqtSlot(str, int)
+    def _check_box(self, label, checked):
+        checkbox = getattr(self.ui, label)
+        checkbox.setChecked(checked)
+
     def flatten_button(self, label, checked=True):
         if len(label) == 2:
             button_name = 'card_' + label
@@ -183,15 +210,18 @@ class TableSetupActionAndSignals(QObject):
 
         if label[0] != '_':
             button = getattr(self.ui, button_name)
-            button.setFlat(checked)
+            try:
+                button.setFlat(checked)
+            except AttributeError:
+                log.info(f"Ignoring flattening of {button_name}")
 
             excluded_buttons = ['topleft_corner', 'game_number', 'call_value', 'raise_value', 'all_in_call_value',
                                 'my_turn_search_area', 'lost_everything_search_area',
                                 'mouse_fold', 'mouse_fast_fold', 'mouse_raise', 'mouse_full_pot', 'mouse_call',
-                                'mouse_increase', 'mouse_call2', 'mouse_check', 'mouse_imback', 'mouse_half_pot',
-                                'mouse_all_in', 'buttons_search_area', 'call_button', 'raise_button', 'check_button',
-                                'fold_button', 'fast_fold_button', 'all_in_call_button', 'my_turn', 'lost_everything',
-                                'im_back']
+                                'mouse_increase', 'mouse_resume_hand', 'mouse_call2', 'mouse_check', 'mouse_imback',
+                                'mouse_half_pot', 'table_cards_area', 'current_round_pot', 'total_pot_area',
+                                'my_cards_area', 'right_card_area', 'left_card_area', 'top_cards_top_area',
+                                'mouse_all_in', 'buttons_search_area', 'use_neural_network']
             if button_name not in excluded_buttons:
                 button = getattr(self.ui, button_name + '_show')
                 button.setEnabled(checked)
@@ -245,8 +275,8 @@ class TableSetupActionAndSignals(QObject):
         self.signal_update_screenshot_pic.emit(Image.new('RGB', (3, 3)))
 
         log.info("Taking screenshot")
-        config = ConfigObj(CONFIG_FILENAME)
-        control = config['control']
+        config = get_config()
+        control = config.config.get('main', 'control')
         if control == 'Direct mouse control':
             self.original_screenshot = take_screenshot()
 
@@ -384,7 +414,7 @@ class TableSetupActionAndSignals(QObject):
                       f"Are you sure you want to delete the table {self.table_name}? This cannot be undone.",
                       ok_cancel=True)
         if resp == 1024:
-            mongo.delete_table(table_name=self.table_name)
+            mongo.delete_table(table_name=self.table_name, owner=COMPUTER_NAME)
 
     def load(self):
         self.table_name = self.ui.table_name.currentText()
@@ -400,12 +430,15 @@ class TableSetupActionAndSignals(QObject):
         all_buttons = ['call_value', 'raise_value', 'all_in_call_value', 'game_number', 'current_round_pot',
                        'total_pot_area', 'my_turn_search_area', 'lost_everything_search_area', 'table_cards_area',
                        'my_cards_area', 'mouse_fold', 'mouse_fast_fold', 'mouse_raise', 'mouse_full_pot', 'mouse_call',
-                       'mouse_increase', 'mouse_call2', 'mouse_check', 'mouse_imback', 'mouse_half_pot', 'mouse_all_in',
-                       'buttons_search_area', 'call_button', 'raise_button', 'check_button', 'fold_button',
-                       'fast_fold_button', 'all_in_call_button', 'my_turn', 'lost_everything', 'im_back',
+                       'mouse_increase', 'mouse_call2', 'mouse_check', 'mouse_imback', 'mouse_resume_hand',
+                       'mouse_half_pot', 'mouse_all_in',
+                       'buttons_search_area', 'call_button', 'raise_button', 'bet_button', 'check_button',
+                       'fold_button',
+                       'fast_fold_button', 'all_in_call_button', 'my_turn', 'lost_everything', 'im_back', 'resume_hand',
                        'dealer_button', 'covered_card', 'covered_card_area', 'player_name_area', 'player_funds_area',
                        'player_pot_area', 'button_search_area', 'covered_card_area', 'player_name_area',
-                       'player_funds_area', 'player_pot_area', 'button_search_area']
+                       'player_funds_area', 'player_pot_area', 'button_search_area', 'left_card_area',
+                       'right_card_area']
 
         for key in all_buttons:
             log.info(f"UnFlattening button {key}")
@@ -414,6 +447,15 @@ class TableSetupActionAndSignals(QObject):
         log.info(f"Loading table {self.table_name}")
         table = mongo.get_table(table_name=self.table_name)
         log.info(table.keys())
+
+        check_boxes = ['use_neural_network']
+        for check_box in check_boxes:
+            try:
+                self.signal_check_box.emit(check_box, table[check_box])
+            except KeyError:
+                log.info(f"No available data for {check_box}")
+                self.signal_check_box.emit(check_box, 0)
+
         exceptions = ["table_name"]
         players_buttons = ['covered_card_area', 'player_name_area', 'player_funds_area', 'player_pot_area',
                            'button_search_area']
@@ -433,12 +475,39 @@ class TableSetupActionAndSignals(QObject):
                 self.signal_flatten_button.emit(key, True)
 
     @pyqtSlot()
+    def train_model(self):
+        self.table_name = self.ui.table_name.currentText()
+        log.info(f"Start trainig for {self.table_name}")
+        from poker.scraper.table_scraper_nn import CardNeuralNetwork
+        n = CardNeuralNetwork()
+        log.info(f"Creating augmented images in {TRAIN_FOLDER}")
+        n.create_augmented_images(self.table_name)
+        log.info(f"You may add additional training images into {TRAIN_FOLDER}. "
+                 f"Filename does not matter but make sure they are in the correct folder, "
+                 f"so the network knows the correct label.")
+        log.info("Note that to speed up training you may want to install cuda and cudnn drivers "
+                 "so you can train on a GPU if you have one.")
+        input("Press Enter to continue...")
+        n.train_neural_network()
+        n.save_model_to_disk()
+        n.save_model_to_db(self.table_name)
+
+    @pyqtSlot()
     def test_all(self):
         """Test table button"""
         self.table_name = self.ui.table_name.currentText()
         from poker.scraper.table_scraper import TableScraper
         table_dict = mongo.get_table(table_name=self.table_name)
+
         table_scraper = TableScraper(table_dict)
+        table_scraper.nn_model = None
+
+        if 'use_neural_network' in table_dict and table_dict['use_neural_network'] == '2':
+            from tensorflow.keras.models import model_from_json
+            table_scraper.nn_model = model_from_json(table_dict['_model'])
+            mongo.load_table_nn_weights(self.table_name)
+            table_scraper.nn_model.load_weights(get_dir('codebase') + '/loaded_model.h5')
+
         table_scraper.screenshot = self.original_screenshot
         table_scraper.crop_from_top_left_corner()
         table_scraper.is_my_turn()
@@ -449,11 +518,14 @@ class TableSetupActionAndSignals(QObject):
         table_scraper.get_players_in_game()
         table_scraper.get_pots()
         table_scraper.get_players_funds()
+        table_scraper.get_player_pots()
         table_scraper.get_call_value()
         table_scraper.get_raise_value()
         table_scraper.has_all_in_call_button()
         table_scraper.has_call_button()
         table_scraper.has_raise_button()
+        table_scraper.has_bet_button()
+        log.info("Test finished.")
 
 
 def pop_up(title, text, details=None, ok_cancel=False):

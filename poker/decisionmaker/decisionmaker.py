@@ -41,7 +41,8 @@ class Decision(DecisionBase):
         t.bigBlindMultiplier = t.bigBlind / 0.02
 
         # pylint: disable=unidiomatic-typecheck
-        pots = [player['pot'] for player in t.other_players if type(player['pot']) != str]
+        pots = [player['pot']
+                for player in t.other_players if type(player['pot']) != str]
         try:
             self.max_player_pot = max(pots)
             log.debug("Highest player pot: %s", self.max_player_pot)
@@ -56,7 +57,8 @@ class Decision(DecisionBase):
             self.pot_multiple = 0
 
         if p.selected_strategy['use_pot_multiples']:
-            log.info("Using pot multiple: Replacing mincall and minbet: " + str(self.pot_multiple))
+            log.info(
+                "Using pot multiple: Replacing mincall and minbet: " + str(self.pot_multiple))
             t.minCall = self.pot_multiple
             t.minBet = self.pot_multiple
         else:
@@ -68,7 +70,8 @@ class Decision(DecisionBase):
                     log.warning(
                         "Failed to convert current Call value, saving error.png, deriving from bet value, result:")
                     self.DeriveCallButtonFromBetButton = True
-                    t.minCall = np.round(float(t.get_current_bet_value(p)) / 2, 2)
+                    t.minCall = np.round(
+                        float(t.get_current_bet_value(p)) / 2, 2)
                     log.info("mincall: " + str(t.minCall))
                     # adjMinCall=minCall*c1*c2
 
@@ -102,27 +105,36 @@ class Decision(DecisionBase):
         self.outs = outs
 
         if outs > 0:
-            log.info("Minimum equity is reduced because of outs by percent: %s", int(self.out_adjustment * 100))
+            log.info("Minimum equity is reduced because of outs by percent: %s", int(
+                self.out_adjustment * 100))
 
         self.preflop_adjustment = -float(
             p.selected_strategy['pre_flop_equity_reduction_by_position']) * t.position_utg_plus
+        log.info(f"Preflop adjustment from position UTG+{t.position_utg_plus}: {self.preflop_adjustment}")
 
         if not np.isnan(t.first_raiser_utg):
-            self.preflop_adjustment += float(p.selected_strategy['pre_flop_equity_increase_if_bet'])
-                                       # + ((5 - t.first_raiser_utg) * 0.01)
+            self.preflop_adjustment += float(
+                p.selected_strategy['pre_flop_equity_increase_if_bet'])
+        log.info(f"Preflop adjustment from position and raisers {self.preflop_adjustment}")
+        # + ((5 - t.first_raiser_utg) * 0.01)
 
         if not np.isnan(t.first_caller_utg):
-            self.preflop_adjustment += float(p.selected_strategy['pre_flop_equity_increase_if_call'])
-                    # + (5 - t.first_caller_utg) * 0.01)
+            self.preflop_adjustment += float(
+                p.selected_strategy['pre_flop_equity_increase_if_call'])
+            # + (5 - t.first_caller_utg) * 0.01)
+        log.info(f"Preflop adjustment from position, raisers and callers {self.preflop_adjustment}")
 
         # in case the other players called my bet become less aggressive and make an adjustment for the second round
         if (h.histGameStage == t.gameStage and h.lastRoundGameID == h.GameID) or h.lastSecondRoundAdjustment > 0:
             if t.gameStage == 'PreFlop':
-                self.secondRoundAdjustment = float(p.selected_strategy['secondRoundAdjustmentPreFlop'])
+                self.secondRoundAdjustment = float(
+                    p.selected_strategy['secondRoundAdjustmentPreFlop'])
             else:
-                self.secondRoundAdjustment = float(p.selected_strategy['secondRoundAdjustment'])
+                self.secondRoundAdjustment = float(
+                    p.selected_strategy['secondRoundAdjustment'])
 
-            secondRoundAdjustmentPowerIncrease = int(p.selected_strategy['secondRoundAdjustmentPowerIncrease'])
+            secondRoundAdjustmentPowerIncrease = int(
+                p.selected_strategy['secondRoundAdjustmentPowerIncrease'])
         else:
             self.secondRoundAdjustment = 0
             secondRoundAdjustmentPowerIncrease = 0
@@ -139,8 +151,10 @@ class Decision(DecisionBase):
         self.potAdjustmentPreFlop = min(self.potAdjustmentPreFlop,
                                         float(p.selected_strategy['maxPotAdjustmentPreFlop']))
 
-        self.potAdjustment = t.totalPotValue / t.bigBlind / 250 * float(p.selected_strategy['potAdjustment'])
-        self.potAdjustment = min(self.potAdjustment, float(p.selected_strategy['maxPotAdjustment']))
+        self.potAdjustment = t.totalPotValue / t.bigBlind / \
+                             250 * float(p.selected_strategy['potAdjustment'])
+        self.potAdjustment = min(self.potAdjustment, float(
+            p.selected_strategy['maxPotAdjustment']))
 
         if t.gameStage == GameStages.PreFlop.value:
             t.power1 = int(p.selected_strategy['PreFlopCallPower'])
@@ -151,7 +165,8 @@ class Decision(DecisionBase):
             t.potStretch = 1
             t.maxEquityCall = 1
         elif t.gameStage == GameStages.Flop.value:
-            t.power1 = int(p.selected_strategy['FlopCallPower']) + secondRoundAdjustmentPowerIncrease
+            t.power1 = int(
+                p.selected_strategy['FlopCallPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityCall = float(
                 p.selected_strategy[
                     'FlopMinCallEquity']) + self.secondRoundAdjustment - self.potAdjustment - self.out_adjustment
@@ -159,7 +174,8 @@ class Decision(DecisionBase):
             t.potStretch = 1
             t.maxEquityCall = 1
         elif t.gameStage == GameStages.Turn.value:
-            t.power1 = int(p.selected_strategy['TurnCallPower']) + secondRoundAdjustmentPowerIncrease
+            t.power1 = int(
+                float(p.selected_strategy['TurnCallPower'])) + secondRoundAdjustmentPowerIncrease
             t.minEquityCall = float(
                 p.selected_strategy[
                     'TurnMinCallEquity']) + self.secondRoundAdjustment - self.potAdjustment - self.out_adjustment
@@ -167,16 +183,19 @@ class Decision(DecisionBase):
             t.potStretch = 1
             t.maxEquityCall = 1
         elif t.gameStage == GameStages.River.value:
-            t.power1 = int(p.selected_strategy['RiverCallPower']) + secondRoundAdjustmentPowerIncrease
+            t.power1 = int(
+                p.selected_strategy['RiverCallPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityCall = float(
                 p.selected_strategy['RiverMinCallEquity']) + self.secondRoundAdjustment - self.potAdjustment
             t.minCallAmountIfAboveLimit = t.bigBlind * 2
             t.potStretch = 1
             t.maxEquityCall = 1
 
-        t.maxValue_call = float(p.selected_strategy['initialFunds']) * t.potStretch
+        t.maxValue_call = float(
+            p.selected_strategy['initialFunds']) * t.potStretch
         minimum_curve_value = 0 if p.selected_strategy['use_pot_multiples'] else t.smallBlind
-        minimum_curve_value2 = 0 if p.selected_strategy['use_pot_multiples'] else t.minCallAmountIfAboveLimit
+        minimum_curve_value2 = 0 if p.selected_strategy[
+            'use_pot_multiples'] else t.minCallAmountIfAboveLimit
         d = Curvefitting(np.array([t.equity]), minimum_curve_value, minimum_curve_value2, t.maxValue_call,
                          t.minEquityCall,
                          t.maxEquityCall, t.max_X, t.power1)
@@ -198,28 +217,32 @@ class Decision(DecisionBase):
             'opponent_raised_without_initiative_river'] * opponent_raised_without_initiative
 
         if t.gameStage == GameStages.PreFlop.value:
-            t.power2 = int(p.selected_strategy['PreFlopBetPower']) + secondRoundAdjustmentPowerIncrease
+            t.power2 = int(
+                p.selected_strategy['PreFlopBetPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityBet = float(
                 p.selected_strategy[
                     'PreFlopMinBetEquity']) + self.secondRoundAdjustment - self.potAdjustment + self.preflop_adjustment
             t.maxEquityBet = float(p.selected_strategy['PreFlopMaxBetEquity'])
             t.minBetAmountIfAboveLimit = t.bigBlind * 2
         elif t.gameStage == GameStages.Flop.value:
-            t.power2 = int(p.selected_strategy['FlopBetPower']) + secondRoundAdjustmentPowerIncrease
+            t.power2 = int(
+                p.selected_strategy['FlopBetPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityBet = float(
                 p.selected_strategy[
                     'FlopMinBetEquity']) + self.secondRoundAdjustment - self.out_adjustment + opponent_raised_without_initiative_flop
             t.maxEquityBet = 1
             t.minBetAmountIfAboveLimit = t.bigBlind * 2
         elif t.gameStage == GameStages.Turn.value:
-            t.power2 = int(p.selected_strategy['TurnBetPower']) + secondRoundAdjustmentPowerIncrease
+            t.power2 = int(
+                p.selected_strategy['TurnBetPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityBet = float(
                 p.selected_strategy[
                     'TurnMinBetEquity']) + self.secondRoundAdjustment - self.out_adjustment + opponent_raised_without_initiative_turn
             t.maxEquityBet = 1
             t.minBetAmountIfAboveLimit = t.bigBlind * 2
         elif t.gameStage == GameStages.River.value:
-            t.power2 = int(p.selected_strategy['RiverBetPower']) + secondRoundAdjustmentPowerIncrease
+            t.power2 = int(
+                p.selected_strategy['RiverBetPower']) + secondRoundAdjustmentPowerIncrease
             t.minEquityBet = float(
                 p.selected_strategy[
                     'RiverMinBetEquity']) + self.secondRoundAdjustment + opponent_raised_without_initiative_river
@@ -229,7 +252,8 @@ class Decision(DecisionBase):
         # adjustment for player profile
         if t.isHeadsUp and t.gameStage != GameStages.PreFlop.value:
             try:
-                self.flop_probability_player = l.get_flop_frequency_of_player(t.PlayerNames[0])
+                self.flop_probability_player = l.get_flop_frequency_of_player(
+                    t.PlayerNames[0])
                 log.info(
                     "Probability profile of : " + t.PlayerNames[0] + ": " + str(self.flop_probability_player))
             except:
@@ -247,13 +271,15 @@ class Decision(DecisionBase):
                 self.player_profile_adjustment = -2
             else:
                 self.player_profile_adjustment = 0
-        t.maxValue_bet = float(p.selected_strategy['initialFunds2']) * t.potStretch
+        t.maxValue_bet = float(
+            p.selected_strategy['initialFunds2']) * t.potStretch
         d = Curvefitting(np.array([t.equity]), minimum_curve_value, t.minBetAmountIfAboveLimit, t.maxValue_bet,
                          t.minEquityBet,
                          t.maxEquityBet, t.max_X, t.power2)
         self.maxBetE = round(d.y[0], 2)
 
-        self.finalCallLimit = self.maxCallE  # min(self.maxCallE, self.maxCallEV)
+        # min(self.maxCallE, self.maxCallEV)
+        self.finalCallLimit = self.maxCallE
         self.finalBetLimit = self.maxBetE  # min(self.maxBetE, self.maxCallEV)
 
     def preflop_table_analyser(self, t, h, p):
@@ -263,7 +289,8 @@ class Decision(DecisionBase):
             crd1 = crd1.upper()
             crd2 = crd2.upper()
 
-            sheet_name = t.derive_preflop_sheet_name(t, h, t.first_raiser_utg, t.first_caller_utg, t.second_raiser_utg)
+            sheet_name = t.derive_preflop_sheet_name(
+                t, h, t.first_raiser_utg, t.first_caller_utg, t.second_raiser_utg)
 
             log.info("Sheet name: " + sheet_name)
             excel_file = h.preflop_sheet
@@ -274,7 +301,8 @@ class Decision(DecisionBase):
                 sheet = excel_file[sheet_name]
                 log.debug("Sheetname found")
             elif sheet_name[:-2] in excel_file:
-                log.warning("Sheetname " + sheet_name + " not found, cutting last element: " + sheet_name[:-2])
+                log.warning("Sheetname " + sheet_name +
+                            " not found, cutting last element: " + sheet_name[:-2])
                 sheet = excel_file[sheet_name[:-2]]
             else:
                 backup_sheet_name = '2R1'
@@ -294,12 +322,15 @@ class Decision(DecisionBase):
             elif crd2 in handlist:
                 found_card = crd2
 
-            log.debug("Looking in preflop table for: " + crd1 + ", " + crd2 + ", " + crd1[0:2])
+            log.debug("Looking in preflop table for: " +
+                      crd1 + ", " + crd2 + ", " + crd1[0:2])
             log.debug("Found in preflop table: " + found_card)
 
             if found_card != '':
-                call_probability = sheet[sheet['Hand'] == found_card]['Call'].iloc[0]
-                bet_probability = sheet[sheet['Hand'] == found_card]['Raise'].iloc[0]
+                call_probability = sheet[sheet['Hand']
+                                         == found_card]['Call'].iloc[0]
+                bet_probability = sheet[sheet['Hand']
+                                        == found_card]['Raise'].iloc[0]
                 rnd = np.random.uniform(0, 100, 1)[0] / 100
                 log.debug("Random number: " + str(rnd))
                 log.debug("Call probability: " + str(call_probability))
@@ -312,10 +343,12 @@ class Decision(DecisionBase):
                 elif rnd >= call_probability and rnd <= bet_probability + call_probability:
                     if sheet_name in ['1', '2', '3', '4']:
                         self.decision = DecisionTypes.bet3
-                        log.info('Preflop betting 3 activated from preflop table')
+                        log.info(
+                            'Preflop betting 3 activated from preflop table')
                     else:
                         self.decision = DecisionTypes.bet4
-                        log.info('Preflop betting 4 activated from preflop table')
+                        log.info(
+                            'Preflop betting 4 activated from preflop table')
                         # 1, 2, 3, 4 = half pot
                         # 5 = pot and the
                         # rest POT
@@ -335,6 +368,10 @@ class Decision(DecisionBase):
         if self.finalCallLimit >= t.minCall:
             self.decision = DecisionTypes.call
             log.debug("Call limit ok: calling would be fine")
+        if t.allInCallButton and t.minCall < 0 and self.finalCallLimit < t.minBet:
+            log.info(
+                "All in call: suggest folding because call button is in raise button position")
+            self.decision = DecisionTypes.fold
 
     def betting(self, t, p, h):
         # preflop
@@ -342,6 +379,11 @@ class Decision(DecisionBase):
             if self.finalBetLimit > float(t.minBet):
                 log.info("Bet1 condition met")
                 self.decision = DecisionTypes.bet1
+
+            if (self.finalBetLimit >= float(t.totalPotValue) / 2) \
+                    and (p.selected_strategy['increased_preflop_betting'] == 2):
+                log.info("Bet3 condition met")
+                self.decision = DecisionTypes.bet3
 
             # if (self.finalBetLimit > float(t.minBet)) and \
             #         (t.first_raiser_utg >= 0 or t.first_caller_utg >= 0):
@@ -359,7 +401,6 @@ class Decision(DecisionBase):
                          p.selected_strategy[stage + '_betting_condidion_1'] == 0):
                     self.decision = DecisionTypes.bet3
                     log.info("Bet3 activated (based on pot multiple decision)")
-
 
             # absolute value decision
             else:
@@ -479,9 +520,11 @@ class Decision(DecisionBase):
                     break
             opponentFunds = t.other_players[i]['funds']
 
-            if opponentFunds == '': opponentFunds = float(p.selected_strategy['initialFunds'])
+            if opponentFunds == '':
+                opponentFunds = float(p.selected_strategy['initialFunds'])
 
-            self.bullyMode = opponentFunds > float(p.selected_strategy['bullyDivider'])
+            self.bullyMode = opponentFunds > float(
+                p.selected_strategy['bullyDivider'])
 
             if (t.equity >= float(p.selected_strategy['minBullyEquity'])) and (
                     t.equity <= float(p.selected_strategy['maxBullyEquity'])) and self.bullyMode:
@@ -494,17 +537,23 @@ class Decision(DecisionBase):
     def admin(self, t, p, h):
         if t.gameStage != GameStages.PreFlop.value:
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 2 and self.decision == DecisionTypes.bet1: self.decision = DecisionTypes.bet2
+                       'minimum_bet_size']) == 2 and self.decision == DecisionTypes.bet1:
+                self.decision = DecisionTypes.bet2
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 3 and self.decision == DecisionTypes.bet1: self.decision = DecisionTypes.bet3
+                       'minimum_bet_size']) == 3 and self.decision == DecisionTypes.bet1:
+                self.decision = DecisionTypes.bet3
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 3 and self.decision == DecisionTypes.bet2: self.decision = DecisionTypes.bet3
+                       'minimum_bet_size']) == 3 and self.decision == DecisionTypes.bet2:
+                self.decision = DecisionTypes.bet3
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet1: self.decision = DecisionTypes.bet4
+                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet1:
+                self.decision = DecisionTypes.bet4
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet2: self.decision = DecisionTypes.bet4
+                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet2:
+                self.decision = DecisionTypes.bet4
             if int(p.selected_strategy[
-                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet3: self.decision = DecisionTypes.bet4
+                       'minimum_bet_size']) == 4 and self.decision == DecisionTypes.bet3:
+                self.decision = DecisionTypes.bet4
 
         if t.checkButton == False and t.minCall == 0.0 and p.selected_strategy['use_pot_multiples'] == 0:
             self.ErrCallButton = True
@@ -518,20 +567,30 @@ class Decision(DecisionBase):
 
         h.lastSecondRoundAdjustment = self.secondRoundAdjustment
 
-        if self.decision == DecisionTypes.check or self.decision == DecisionTypes.check_deception: h.myLastBet = 0
-        if self.decision == DecisionTypes.call or self.decision == DecisionTypes.check_deception:  h.myLastBet = t.minCall
+        if self.decision == DecisionTypes.check or self.decision == DecisionTypes.check_deception:
+            h.myLastBet = 0
+        if self.decision == DecisionTypes.call or self.decision == DecisionTypes.check_deception:
+            h.myLastBet = t.minCall
 
-        if self.decision == DecisionTypes.bet1: h.myLastBet = t.minBet
-        if self.decision == DecisionTypes.bet2: h.myLastBet = t.minBet * float(
-            p.selected_strategy['BetPlusInc']) + t.minBet
-        if self.decision == DecisionTypes.bet_bluff: h.myLastBet = t.totalPotValue / 2
-        if self.decision == DecisionTypes.bet3: h.myLastBet = t.totalPotValue / 2
-        if self.decision == DecisionTypes.bet4: h.myLastBet = t.totalPotValue
+        if self.decision == DecisionTypes.bet1:
+            h.myLastBet = t.minBet
+        if self.decision == DecisionTypes.bet2:
+            h.myLastBet = t.minBet * float(
+                p.selected_strategy['BetPlusInc']) + t.minBet
+        if self.decision == DecisionTypes.bet_bluff:
+            h.myLastBet = t.totalPotValue / 2
+        if self.decision == DecisionTypes.bet3:
+            h.myLastBet = t.totalPotValue / 2
+        if self.decision == DecisionTypes.bet4:
+            h.myLastBet = t.totalPotValue
 
         if t.checkButton:
-            if self.decision == DecisionTypes.fold: self.decision = DecisionTypes.check
-            if self.decision == DecisionTypes.call: self.decision = DecisionTypes.check
-            if self.decision == DecisionTypes.call_deception: self.decision = DecisionTypes.check_deception
+            if self.decision == DecisionTypes.fold:
+                self.decision = DecisionTypes.check
+            if self.decision == DecisionTypes.call:
+                self.decision = DecisionTypes.check
+            if self.decision == DecisionTypes.call_deception:
+                self.decision = DecisionTypes.check_deception
 
     def make_decision(self, t, h, p, l):
         self.preflop_sheet_name = ''
@@ -549,7 +608,8 @@ class Decision(DecisionBase):
             self.preflop_table_analyser(t, h, p)
 
         if not (p.selected_strategy['preflop_override'] and t.gameStage == GameStages.PreFlop.value):
-            log.info('Make preflop decision based on equity, not using preflot table')
+            log.info(
+                'Make preflop decision based on equity, not using preflot table')
             self.calling(t, p, h)
             self.betting(t, p, h)
             if t.checkButton:

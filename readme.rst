@@ -1,68 +1,156 @@
-Deep mind pokerbot for pokerstars and partypoker
-================================================
+Deep mind pokerbot for pokerstars, partypoker and GGPoker
+==========================================================
 
-This pokerbot plays automatically on Pokerstars and Partypoker.
+This pokerbot plays automatically on Pokerstars, Partypoker and GG Poker. Any other table can be mapped as well.
 It works with image recognition, montecarlo simulation and a basic genetic algorithm.
 The mouse is moved automatically and the bot can potentially play for hours based on a large number of parameters.
-A new gui to help it recognize new tables ia available as well.
 
 You can download the binaries and run the executable directly from here:
 https://sourceforge.net/projects/partypoker-pokerstars-pokerbot/
 
-
-.. figure:: doc/fullscreen1.png
-
-
-Related projects:
-Training the bot by playing against itself is a separate project which can be found here:
-https://github.com/dickreuter/neuron_poker
-
-
 Running the bot:
 ----------------
+
+Partypoker:
+~~~~~~~~~~~
+* Use Fast Forward Tables
+* Select Official PartyPoker table scraper
+
+.. figure:: doc/partypoker.gif
+
+Pokerstars:
+~~~~~~~~~~~
+* Use Zoom Tables
+* Select Official Poker Stars table scraper
+* For Pokerstars you will need to make some adjustments to the client. It needs to look exactly as the below, in order to run it with the Official Pokerstars Table scraper:
+* Make sure to match the card styles (4 color), covered card styles, and table styles.
+
+.. figure:: doc/ps-example.png
+.. figure:: doc/ps-table-styles.png
+
+GGPoker:
+~~~~~~~~~~~
+Make sure your GGPoker setup looks as follows when using it with the Official GGPoker Table:
+
+.. figure:: doc/ggpk2.png
 
 
 General setup:
 ~~~~~~~~~~~~~~
 
-If you just want to run the bot, please download the binaries from here: https://sourceforge.net/projects/partypoker-pokerstars-pokerbot/
+If you just want to run the bot, please do the following:
 
-For a start please make sure of the following:
+Install the binearies of the bot from here: https://sourceforge.net/projects/partypoker-pokerstars-pokerbot/
 
-Use Partypoker standard setup. Currently, the bot only works on tables with 6 people and where the bot is always sat at the bottom right.
-Put the partypoker client (inside the VM) and the bot outside the VM. Put them next to each other so that the bot can see the full table of Partypoker.
-In setup choose Direct Mouse Control. It will then take direct screenshots and move the mouse. If that works, you can try with direct VM control.
-Start with a table like Fast Forward Holdem $1-$2 on Partypoker where the stakes are low ( In the strategy editor create a copy of a strategy and edit it yourself so that you win.
-The bot may not work with play money as it's optimized on small stakes to read the numbers correctly.
-The current version is compatible with Windows. Make sure that you don't use any dpi scaling, Otherwise the tables won't be recognized.
+You can then immediately run the bot. It will analyze the poker client, move the mouse and play in accordance
+with one of its pre-programmed strategies. Most of the strategies are based on zoom or Fast Forward tables.
+You are welcome to edit and imporve any strategies to optmize the play of the bot for your needs.
 
-It may be useful to run the poker client inside virtual box https://www.virtualbox.org/wiki/Downloads as it can be controlled easier that way.
-Run the bot outside of this virtual machine. As it works with image recognition make sure to not obstruct the view to the Poker software.
-Only one table window should be visible.
+In most cases it may be useful to put the poker client inside a virtual machine to avoid it from interfering
+with the bot. Also, the bot will then be able to control the mouse inside the virtual machine, without blocking
+the whole computer:
+
+* Download Virtualbox: https://www.virtualbox.org/
+* Download Windows 10 32 bit Iso File (x86_dvd.iso), for example from here https://www.softlay.com/operating-system/windows-7-ultimate-iso-download.html
+* Create a new virtual box environment and use the ISO file as a startup
+* Make sure to give the Virtualbox only 1 CPU as the computing power is needed for the bot (mainly for OCR)
+* Install Partypoker or Pokerstars in the virtual box environment
+* Install the pokerbot directly onto your computer (outside of the virtual box)
+* In the Setup select your virtual box instance (instead of direct mouse control)
+* Join the telegram chat by pressing the chat button
+
+* The current version Only works on windows
+* Do not obstruct the view of the table as the bot is based on image recognition
+* Only one table window should be visible.
+* For best performance minimize all windows in the vm, except the table window itself
+* Don't use any dpi scaling in the virtualbox
+* In setup, try to select your virtual machine instead of direct mouse control. That way mouse movements won't obstruct you.
 
 
-Running via python code
-~~~~~~~~~~~~~~~~~~~~~~~
-- Download pycharm as an IDE
-- Install python 3.8 or Anaconda (=python with packages)
-- Create an environment with ``conda create -n poker python=3.8`` or use pycharm's functionality to create a new virtual environment. Chefck youtube for details.
+Strategy editor
+---------------
+A variety of factors are taken into consideration when the bot makes decisions and they can be adjusted in the strategy editor:
+
+- Equity (winning probability), which is calculated by a montecarlo simulation
+- Equity and minimum call/bet value need to be on the left of the corresponding curve in order for the bot not to fold
+- Various other factors, such as behaviour in the previous rounds are taken into consideration. Check out the strategy editor for more details.
+- Hover over each item to see a more detailed description
+
+.. figure:: doc/strategy2.png
+
+A variety of other options can be edited for each strategy:
+
+.. figure:: doc/strategy_editor.gif
+
+
+Full version:
+~~~~~~~~~~~~~
+
+The full version allows you to:
+
+* Edit and create new Strategies
+* View all Strategies of all users
+
+To purchase, please follow this link. You'll then receive a password within 24 hours.
+https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-910576034F790373KMC6UZOQ
+
+You can also get a free subscription if you make some meaningful contribution to the codebase.
+
+The easiest way to contribute is by:
+
+- Adding new tables
+- Adding new strategies
+- Directly add fixes to the code and create a pull request
+
+Strategy Analyzer
+-----------------
+
+- You can see the profitability of each strategy in the strategy analyzer.
+- The bar chart indicates what action types have led to wins or losses at each stage (preflop, flop turn and river)
+.. figure:: doc/strategy_analyser1.jpg
+
+Looking at the stacked bar chart in more detail, gives you clues how to adjust the strategy to maximize your wins:
+
+.. figure:: doc/analyzer_bar2.png
+
+Analyze individual hands:
+
+.. figure:: doc/strategy_analyzer.gif
+
+
+Mapping new tables
+------------------
+
+The bot can learn to read new tables, either by using templates or by training a neural network that uses data augmentation based on the given templates.
+
+`Click here to see a Video description how to add a new table <https://www.dropbox.com/s/txpbtsi1drncq4x/20200531_194837.mp4?dl=0>`_
+
+The setup to add new tables looks like this:
+
+.. figure:: doc/scraper.png
+
+- Open the pokerbot and click on table setup to open the window that helps you create new tables.
+- Open the poker client next to it, make sure it's not dpi scaled, so the pokerbot can take screenshots.
+- Start with creating a new template, you can do this by entering a name for your template, for example Pokerstars 1-2 zoom poker. Click on 'Blank new'.
+- Now the first think you want to do is to take a screenshot of the pokerstars window with the table. You can do this by pressing on the Take screenshot button. You should not see in the lower window a full screenshot of what is on your screen.
+- The first step is now to mark the top left corner of the poker tables window, which will be the point of reference for everything else that will follow. To mark the top left corner, you need to mark it by first clicking on the top left part of it and then on the right lower part of it. once you have done this, it will appear in the second window. You can save it by clicking on the "save newly selected top left corner" button.
+- Now you can crop it by pressing on the crop from top left corner button. This will discard most of the screenshot and only keep the screenshot from the top left corner and everything a few hundred pixels to the right of it and below.
+- Next you will want to mark everything else in the window. Start with the Buttons search area. You can do this again by clicking on the top left area of the buttons and then on the bottom right area of where the buttons appear. Once you are happy with the selection, click on the "Buttons search area".
+- If you hover over the buttons, you will get a more detailed description of what you need to pay attention to.
+- Note that you will need to take many screenshots, crop them (don't select the top left corner again, as this you should only do once), instead load it and then crop the image. After that make your selection of the different images and save them by pressing on the corresponding button. You'll need to teach it every card and every button etc.
+
+
+Running via python source code
+------------------------------
+- Download pycharm communite edition as an IDE from here: https://www.jetbrains.com/pycharm/download/#section=windows
+- Install python 3.7 or Anaconda (=python with packages) from here: https://www.python.org/downloads/release/python-379/
+- Create an environment with ``conda create -n poker python=3.7`` or use pycharm's functionality to create a new virtual environment. Check youtube for details.
 - Install all the packages with ``pip install -r requirements.txt``
 - You also may need to get c++ runtime distributable: https://visualstudio.microsoft.com/downloads/
 - Install tesseract from https://github.com/UB-Mannheim/tesseract/wiki which is needed for OCR of the numbers that are scraped
 - Install virtualbox from https://www.virtualbox.org/wiki/Downloads and put the poker client into the virtual box. That way it can be controlled without having to use the mouse in your main window.
 - Run ``main.py`` from pycharm after setting up the above created virtual environment as interpreter (check youtube)
 
-Strategies
-----------
-The decision is made by the Decision class in decisionmaker.py. A variety of factors are taken into consideration:
-
-- Equity (winning probability), which is calculated by Montecarlo_v3.py (will be replaced with a faster numpy-only version in Montecarlo_v4.py)
-- Equity and minimum call/bet value need to be on the left of the corresponding curve in order for the bot not to fold
-- Various other factors, such as behaviour in the previous rounds are taken into consideration. Check out the strategy editor ffor more details.
-
-.. figure:: doc/strategy2.png
-.. figure:: doc/strategy_analyser1.jpg
-.. figure:: doc/strategy_analyser_scatter.jpg
 
 Packages and modules:
 ~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +175,7 @@ poker.decisionmaker
 -  ``montecarlo_numpy2.py``: fast numpy based montecarlo simulation to
    calculate equity. Not yet working correctly. Some tests are failing. Feel free to fix them.
 -  ``montecarlo_python.py``: relatively slow python based montecarlo for equity calculation. Supports
-   preflight ranges for other players.
+   preflop ranges for other players.
 
 poker.tests
 ^^^^^^^^^^^
@@ -96,51 +184,21 @@ poker.tests
 -  ``test_pylint.py``: pylint and pydoc tests to ensure pep8 standards and static code analysis
 
 
+Graphical user interface (gui)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Roadmap
--------
-- [x] Build a framework that can play online
-- [x] Createa a tool that helps to map the tables and make maps shared over all users via mongodb
-- [x] Update the pokerbot to the new table format of partypoker
-- [ ] Update the pokerbot to the new table format of pokerstars
-- [ ] Fix pylint errors and imporve code quality
+- Download QT for open source project: https://www.qt.io/download-open-source
+- Use the qt designer to edit any of the .ui files in gui/ui
+
+
+Next Priorities
+---------------
+
+
 - [ ] Update tests. Some are currently outdated. More tests are needed
-- [ ] Make travis to work. Windows support is currently limited, so most likely the bot needs to be made linux compatible (and also mac)
 - [ ] Add more strategies
-- [ ] The bot is using tesseract to recognize the numbers of how high the calls and bets are and how big the pot sizes are. Currently all images need to be rescaled and filtered before they are fed to tesseract.
-After that regular expressions are used to further filter the results. This is not a satisfactory method and can lead to errors. Ideally tesseract or any other OCR libary could be trained to recognize the numbers correctly.
-- [ ] Combine the bot with the neuron_poker project and have it play based on learned strategies via self-play based on reinforcement learning
-
-
-
-How to contribute
------------------
-
-- The easiest way to contribute is by either:
-    - adding new tables.
-    - Adding new strategies
-    - Directly add fixes to the code and create a pull request
-
-
-Adding new tables
-~~~~~~~~~~~~~~~~~
-
-`Click here to see a Video description how to add a new table <https://www.dropbox.com/s/txpbtsi1drncq4x/20200531_194837.mp4?dl=0>`_
-
-The setup to add new tables looks like this:
-
-.. figure:: doc/scraper.png
-
-- Open the pokerbot and click on table setup to open the window that helps you create new tables.
-- Open the poker client next to it, make sure it's not dpi scaled, so the pokerbot can take screenshots.
-- Start with creating a new template, you can do this by entering a name for your template, for example Pokerstars 1-2 zoom poker. Click on 'Blank new'.
-- Now the first think you want to do is to take a screenshot of the pokerstars window with the table. You can do this by pressing on the Take screenshot button. You should not see in the lower window a full screenshot of what is on your screen.
-- The first step is now to mark the top left corner of the poker tables window, which will be the point of reference for everything else that will follow. To mark the top left corner, you need to mark it by first clicking on the top left part of it and then on the right lower part of it. once you have done this, it will appear in the second window. You can save it by clicking on the "save newly selected top left corner" button.
-- Now you can crop it by pressing on the crop from top left corner button. This will discard most of the screenshot and only keep the screenshot from the top left corner and everything a few hundred pixels to the right of it and below.
-- Next you will want to mark everything else in the window. Start with the Buttons search area. You can do this again by clicking on the top left area of the buttons and then on the bottom right area of where the buttons appear. Once you are happy with the selection, click on the "Buttons search area".
-- If you hover over the buttons, you will get a more detailed description of what you need to pay attention to.
-- Note that you will need to take many screenshots, crop them (don't select the top left corner again, as this you should only do once), instead load it and then crop the image. After that make your selection of the different images and save them by pressing on the corresponding button. You'll need to teach it every card and every button etc.
-
+- [ ] Switch from using pytesseract to tesserocr to speed up OCR, this should considerably speed up the bot
+- [ ] Better Analyze the collected data to improve strategies
 
 
 Making fixes in the code
@@ -167,7 +225,6 @@ To contribute do the following:
 - Create a pull request on your github.com to merge your branch with the upstream master.
 - When your pull request is approved, it will be merged into the upstream/master.
 - Please make sure that all tests are passing, including the pylint test. You can either run them locally on your machine, or when you push check the travis log on github. [currently many are failing, feel free to help fixing them!]
-
 
 
 
@@ -203,3 +260,9 @@ Still having problems?
 
 - Check the log file. In the folder where you installed the pokerbot, there is a subfolder with the log files in /log. There are also screenshots in /log/screenshots that may be able to help debug the problem.
 - Create a issue on the link at the top of this github page https://github.com/dickreuter/Poker/issues or email dickreuter@gmail.com
+
+
+Related projects
+~~~~~~~~~~~~~~~~
+Training the bot by playing against itself is a separate project which can be found here:
+https://github.com/dickreuter/neuron_poker

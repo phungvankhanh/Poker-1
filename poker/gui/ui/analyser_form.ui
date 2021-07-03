@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>771</width>
-    <height>751</height>
+    <width>876</width>
+    <height>946</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,50 +24,12 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="combobox_gamestage">
-        <property name="toolTip">
-         <string>Choose the game stage you want to focus on.</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="2">
        <widget class="QComboBox" name="combobox_actiontype">
         <property name="toolTip">
          <string>Choose what kind of decision you want to analyse in more detail.</string>
         </property>
        </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Action Type</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Strategy</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Game Stage</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Total played hands</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLCDNumber" name="lcdNumber_2"/>
       </item>
       <item row="2" column="1">
        <widget class="QLabel" name="label_5">
@@ -82,7 +44,55 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLCDNumber" name="lcdNumber"/>
+       <widget class="QLCDNumber" name="lcdNumber">
+        <property name="lineWidth">
+         <number>1</number>
+        </property>
+        <property name="midLineWidth">
+         <number>0</number>
+        </property>
+        <property name="smallDecimalPoint">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Action at End Stage</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLCDNumber" name="lcdNumber_2"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Total played hands</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="combobox_gamestage">
+        <property name="toolTip">
+         <string>Choose the game stage you want to focus on.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Strategy</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>End Stage</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -92,6 +102,12 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="EquityHistogram">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>100</verstretch>
+        </sizepolicy>
+       </property>
        <attribute name="title">
         <string>Equity Histogram</string>
        </attribute>
@@ -99,19 +115,19 @@
         <item>
          <layout class="QVBoxLayout" name="vLayout_fundschange">
           <item>
-           <widget class="QWidget" name="widget" native="true"/>
+           <widget class="QWidget" name="widget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <horstretch>100</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QWidget" name="widget_3" native="true"/>
-            </item>
-           </layout>
-          </item>
           <item>
            <layout class="QVBoxLayout" name="vLayout_bar">
             <item>
@@ -119,7 +135,28 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QWidget" name="widget_3" native="true"/>
+            </item>
+           </layout>
+          </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="show_rounds">
+          <property name="text">
+           <string>Show rounds within stages</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="my_computer_only">
+          <property name="text">
+           <string>Played on my computer only</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -158,8 +195,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>771</width>
-     <height>21</height>
+     <width>876</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>

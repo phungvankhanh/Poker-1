@@ -1,15 +1,11 @@
 import datetime
-import inspect
 import logging
-import re
 import sys
 import threading
 import time
 from copy import copy
 
 import numpy as np
-import pytesseract
-from PIL import Image
 
 from poker.decisionmaker.montecarlo_python import MonteCarlo
 from poker.scraper.table import Table
@@ -37,6 +33,13 @@ class TableScreenBased(Table):
             log.debug("Top left corner NOT found")
             time.sleep(1)
             return False
+
+    def check_for_button_if_slow_table(self, slow_table):
+        """For slow tables wich animations such as GG Poker ensure buttons appear before checking for cards"""
+        if slow_table:
+            return self.is_my_turn()
+        else:
+            return True
 
     def check_for_button(self):
         return self.is_my_turn()
@@ -99,6 +102,19 @@ class TableScreenBased(Table):
         else:
             return True
 
+    def check_for_resume_hand(self, mouse):
+        try:
+            resume_hand = self.resume_hand()
+        except:
+            return True
+
+        if resume_hand:
+            self.gui_signals.signal_status.emit("Resume hand")
+            mouse.mouse_action("resume_hand", self.tlc)
+            return False
+        else:
+            return True
+
     def check_for_call(self):
         self.callButton = self.has_call_button()
         self.gui_signals.signal_progressbar_increase.emit(5)
@@ -112,6 +128,14 @@ class TableScreenBased(Table):
     def check_for_betbutton(self):
         self.gui_signals.signal_progressbar_increase.emit(5)
         self.bet_button_found = self.has_raise_button()
+
+        if not self.bet_button_found:
+            # check for second version of bet button
+            try:
+                self.bet_button_found = self.has_bet_button()
+            except:
+                self.bet_button_found = False
+
         if self.bet_button_found:
             log.debug("Bet button found")
         else:
@@ -131,7 +155,9 @@ class TableScreenBased(Table):
         return True
 
     def get_table_cards(self, h):
-        self.get_table_cards2()
+        if not self.get_table_cards2():
+            return False  # in case of 1 or 2 table cards are seen only
+
         self.cardsOnTable = self.table_cards
 
         self.gameStage = ''
@@ -154,7 +180,7 @@ class TableScreenBased(Table):
         log.info("Cards on table: " + str(self.cardsOnTable))
         log.info("---")
 
-        self.max_X = 1 if self.gameStage != 'PreFlop' else 0.86
+        self.max_X = 1 if self.gameStage != 'PreFlop' else 0.95
 
         return True
 
@@ -189,47 +215,11 @@ class TableScreenBased(Table):
 
         return True
 
-    def get_my_cards(self, h):
+    def get_my_cards(self):
         self.get_my_cards2()
         self.mycards = self.my_cards
 
         if len(self.mycards) == 2:
-            return True
-        else:
-            log.debug("Did not find two player cards: " + str(self.mycards))
-            return False
-
-    def get_my_cards_nn(self, h):
-        func_dict = self.coo[inspect.stack()[0][3]][self.tbl]
-        self.gui_signals.signal_progressbar_increase.emit(5)
-        self.mycards = []
-        width = self.coo['card_sizes'][self.tbl][0]
-        height = self.coo['card_sizes'][self.tbl][1]
-        pil_image1 = self.crop_image(self.entireScreenPIL, self.tlc[0] + func_dict[0], self.tlc[1] + func_dict[1],
-                                     self.tlc[0] + func_dict[0] + width, self.tlc[1] + func_dict[1] + height)
-        pil_image2 = self.crop_image(self.entireScreenPIL, self.tlc[0] + func_dict[2], self.tlc[1] + func_dict[3],
-                                     self.tlc[0] + func_dict[2] + width, self.tlc[1] + func_dict[3] + height)
-
-        card1 = h.n.recognize_card(pil_image1)
-        card2 = h.n.recognize_card(pil_image2)
-        self.mycards.append(card1)
-        self.mycards.append(card2)
-
-        try:
-            pil_image1.save('pics/pp/' + card1 + '.png')
-        except:
-            pass
-        try:
-            pil_image2.save('pics/pp/' + card2 + '.png')
-        except:
-            pass
-
-        for i in range(2):
-            if 'empty' in self.mycards:
-                self.mycards.remove('empty')
-
-        if len(self.mycards) == 2:
-            log.info("My cards: " + str(self.mycards))
             return True
         else:
             log.debug("Did not find two player cards: " + str(self.mycards))
@@ -254,25 +244,25 @@ class TableScreenBased(Table):
         return True
 
     def get_other_player_names(self, p):
-        if p.selected_strategy['gather_player_names'] == 1:
-            func_dict = self.coo[inspect.stack()[0][3]][self.tbl]
-            self.gui_signals.signal_status.emit("Get player names")
-
-            for i, fd in enumerate(func_dict):
-                self.gui_signals.signal_progressbar_increase.emit(2)
-                pil_image = self.crop_image(self.entireScreenPIL, self.tlc[0] + fd[0], self.tlc[1] + fd[1],
-                                            self.tlc[0] + fd[2], self.tlc[1] + fd[3])
-                basewidth = 500
-                wpercent = (basewidth / float(pil_image.size[0]))
-                hsize = int((float(pil_image.size[1]) * float(wpercent)))
-                pil_image = pil_image.resize((basewidth, hsize), Image.ANTIALIAS)
-                try:
-                    recognizedText = (pytesseract.image_to_string(pil_image, None, False, "-psm 6"))
-                    recognizedText = re.sub(r'[\W+]', '', recognizedText)
-                    log.debug("Player name: " + recognizedText)
-                    self.other_players[i]['name'] = recognizedText
-                except Exception as e:
-                    log.debug("Pyteseract error in player name recognition: " + str(e))
+        # if p.selected_strategy['gather_player_names'] == 1:
+        #     func_dict = self.coo[inspect.stack()[0][3]][self.tbl]
+        #     self.gui_signals.signal_status.emit("Get player names")
+        #
+        #     for i, fd in enumerate(func_dict):
+        #         self.gui_signals.signal_progressbar_increase.emit(2)
+        #         pil_image = self.crop_image(self.entireScreenPIL, self.tlc[0] + fd[0], self.tlc[1] + fd[1],
+        #                                     self.tlc[0] + fd[2], self.tlc[1] + fd[3])
+        #         basewidth = 500
+        #         wpercent = (basewidth / float(pil_image.size[0]))
+        #         hsize = int((float(pil_image.size[1]) * float(wpercent)))
+        #         pil_image = pil_image.resize((basewidth, hsize), Image.ANTIALIAS)
+        #         try:
+        #             recognizedText = (pytesseract.image_to_string(pil_image, None, False, "-psm 6"))
+        #             recognizedText = re.sub(r'[\W+]', '', recognizedText)
+        #             log.debug("Player name: " + recognizedText)
+        #             self.other_players[i]['name'] = recognizedText
+        #         except Exception as e:
+        #             log.debug("Pyteseract error in player name recognition: " + str(e))
         return True
 
     def get_other_player_funds(self, p):
@@ -560,7 +550,11 @@ class TableScreenBased(Table):
         if h.previousCards != self.mycards:
             log.info("+++========================== NEW HAND ==========================+++")
             self.time_new_cards_recognised = datetime.datetime.utcnow()
-            self.get_game_number_on_screen(h)
+            if p.selected_strategy['collusion'] == 1:
+                self.get_game_number_on_screen(h)
+            else:
+                self.Game_Number = 0
+                h.game_number_on_screen = 0
             self.get_my_funds(h, p)
 
             h.lastGameID = str(h.GameID)
@@ -595,17 +589,14 @@ class TableScreenBased(Table):
         return True
 
     def upload_collusion_wrapper(self, p, h):
-        if not (h.GameID, self.gameStage) in h.uploader:
-            h.uploader[(h.GameID, self.gameStage)] = True
-            self.game_logger.upload_collusion_data(h.game_number_on_screen, self.mycards, p, self.gameStage)
+        if p.selected_strategy['collusion'] == 1:
+            if not (h.GameID, self.gameStage) in h.uploader:
+                h.uploader[(h.GameID, self.gameStage)] = True
+                self.game_logger.upload_collusion_data(h.game_number_on_screen, self.mycards, p, self.gameStage)
         return True
 
     def get_game_number_on_screen(self, h):
-
         self.Game_Number = self.get_game_number_on_screen2()
-
         h.game_number_on_screen = self.Game_Number
-
         log.debug("Game Number: " + str(self.Game_Number))
-
         return True

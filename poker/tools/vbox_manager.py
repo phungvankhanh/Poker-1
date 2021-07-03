@@ -3,9 +3,8 @@ import logging
 import numpy as np
 import virtualbox
 from PIL import Image
-from configobj import ConfigObj
 
-from poker.tools.helper import CONFIG_FILENAME
+from poker.tools.helper import get_config
 
 
 class VirtualBoxController(virtualbox.library.IMouse):
@@ -17,12 +16,12 @@ class VirtualBoxController(virtualbox.library.IMouse):
         self.logger.setLevel(logging.DEBUG)
         try:
             self.vbox = virtualbox.VirtualBox()
-            config = ConfigObj(CONFIG_FILENAME)
-            self.control_name = config['control']
+            config = get_config()
+            self.control_name = config.config.get('main','control')
             if self.control_name not in self.get_vbox_list():
                 self.control_name = 'Direct mouse control'
-                config['control'] = 'Direct mouse control'
-                config.write()
+                config.config.set('main','control', 'Direct mouse control')
+                config.update_file()
             self.start_vm()
             self.logger.debug("VM session established successfully")
 
@@ -44,7 +43,7 @@ class VirtualBoxController(virtualbox.library.IMouse):
     def get_screenshot_vbox(self):
         h, w, _, _, _, _ = self.session.console.display.get_screen_resolution(0)
         png = self.session.console.display.take_screen_shot_to_array(0, h, w, virtualbox.library.BitmapFormat.png)
-        open('screenshot_vbox.png', 'wb').write(png)
+        open('screenshot_vbox.png', 'wb').write(png)  # pylint: disable=consider-using-with
         # image=Image.fromarray(png)
         # image.show()
         time.sleep(0.2)
@@ -55,7 +54,7 @@ class VirtualBoxController(virtualbox.library.IMouse):
 
     def mouse_click_vbox(self, x, y, dz=0, dw=0):
         self.session.console.mouse.put_mouse_event_absolute(x, y, dz, dw, 0b1)
-        time.sleep(np.random.uniform(0.27, 0.4, 1)[0])
+        time.sleep(np.random.uniform(0.4, 0.6, 1)[0])
         self.session.console.mouse.put_mouse_event_absolute(x, y, dz, dw, 0)
 
     def get_mouse_position_vbox(self):

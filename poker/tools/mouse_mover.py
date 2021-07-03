@@ -3,10 +3,9 @@ import random
 import time
 
 import numpy as np
-from configobj import ConfigObj
 
 from poker import pymouse
-from poker.tools.helper import CONFIG_FILENAME
+from poker.tools.helper import get_config
 from poker.tools.vbox_manager import VirtualBoxController
 
 log = logging.getLogger(__name__)
@@ -33,8 +32,8 @@ class MouseMover(VirtualBoxController):
         time.sleep(np.random.uniform(0.01, 0.1, 1)[0])
 
     def mouse_mover(self, x1, y1, x2, y2):
-        speed = .6
-        stepMin = 7
+        speed = .3
+        stepMin = 20
         stepMax = 50
         rd1 = int(np.round(np.random.uniform(stepMin, stepMax, 1)[0]))
         rd2 = int(np.round(np.random.uniform(stepMin, stepMax, 1)[0]))
@@ -92,10 +91,10 @@ class MouseMover(VirtualBoxController):
 
 class MouseMoverTableBased(MouseMover):
     def __init__(self, table_dict):
-        config = ConfigObj(CONFIG_FILENAME)
+        config = get_config()
 
         try:
-            mouse_control = config['control']
+            mouse_control = config.config.get('main', 'control')
             if mouse_control != 'Direct mouse control':
                 self.vbox_mode = True
             else:
@@ -139,7 +138,7 @@ class MouseMoverTableBased(MouseMover):
         except Exception as e:
             log.warning("Moving mouse via jump away failed" + str(e))
 
-    def mouse_action(self, decision, topleftcorner):
+    def mouse_action(self, decision, topleftcorner, options=None):
         if decision == 'Check Deception':
             decision = 'Check'
         if decision == 'Call Deception':
@@ -160,6 +159,11 @@ class MouseMoverTableBased(MouseMover):
             coo = self.table_dict['mouse_imback']
             self.take_action(coo['x1'] + tlx, coo['y1'] + tly, coo['x2'] + tlx, coo['y2'] + tly)
 
+        elif decision == "resume_hand":
+            time.sleep(np.random.uniform(0, 3, 1)[0])
+            coo = self.table_dict['mouse_resume_hand']
+            self.take_action(coo['x1'] + tlx, coo['y1'] + tly, coo['x2'] + tlx, coo['y2'] + tly)
+
         elif decision == "Call":
             coo = self.table_dict['mouse_call']
             self.take_action(coo['x1'] + tlx, coo['y1'] + tly, coo['x2'] + tlx, coo['y2'] + tly)
@@ -177,7 +181,7 @@ class MouseMoverTableBased(MouseMover):
             self.take_action(coo['x1'] + tlx, coo['y1'] + tly, coo['x2'] + tlx, coo['y2'] + tly)
 
         elif decision == "BetPlus":
-            for i in range(3):
+            for i in range(int(options['increases_num'])):
                 coo = self.table_dict['mouse_increase']
                 self.take_action(coo['x1'] + tlx, coo['y1'] + tly, coo['x2'] + tlx, coo['y2'] + tly)
 

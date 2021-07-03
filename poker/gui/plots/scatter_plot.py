@@ -26,7 +26,8 @@ class ScatterPlot(FigureCanvas):
         self.axes.set_ylabel('Minimum required call')
 
         try:
-            self.axes.set_ylim(0, max(wins['minCall'].tolist() + losses['minCall'].tolist()) * 1.1)
+            self.axes.set_ylim(0, max(np.concatenate([losses['minCall'].astype(float).values,
+                                                      wins['minCall'].astype(float).values])))
         except:
             self.axes.set_ylim(0, 1)
         self.axes.set_xlim(0, 1)
@@ -35,10 +36,12 @@ class ScatterPlot(FigureCanvas):
         # self.axes.set_ylim(0, .2)
 
         area = np.pi * (50 * wins['FinalFundsChange'])  # 0 to 15 point radiuses
-        green_dots = self.axes.scatter(x=wins['equity'].tolist(), y=wins['minCall'], s=area, c='green', alpha=0.5)
+        green_dots = self.axes.scatter(x=wins['equity'].astype(float).tolist(),
+                                       y=wins['minCall'].astype(float), s=area, c='green', alpha=0.2)
 
         area = np.pi * (50 * abs(losses['FinalFundsChange']))
-        red_dots = self.axes.scatter(x=losses['equity'].tolist(), y=losses['minCall'], s=area, c='red', alpha=0.5)
+        red_dots = self.axes.scatter(x=losses['equity'].astype(float).tolist(),
+                                     y=losses['minCall'].astype(float), s=area, c='red', alpha=0.2)
 
         self.axes.legend((green_dots, red_dots),
                          ('Wins', 'Losses'), loc=2)

@@ -3,12 +3,12 @@
 from sys import platform
 
 import numexpr  # required for pyinstaller
+from PyQt5 import QtCore
 
 _ = numexpr
 import matplotlib
 
 from poker.gui.pandas_model import PandasModel
-from poker.gui.plots.bar_plotter import BarPlotter
 from poker.gui.plots.bar_plotter_2 import BarPlotter2
 from poker.gui.plots.curve_plot import CurvePlot
 from poker.gui.plots.funds_change_plot import FundsChangePlot
@@ -16,27 +16,21 @@ from poker.gui.plots.funds_plotter import FundsPlotter
 from poker.gui.plots.histogram_equity import HistogramEquityWinLoss
 from poker.gui.plots.pie_plotter import PiePlotter
 from poker.gui.plots.scatter_plot import ScatterPlot
-from poker.tools.helper import COMPUTER_NAME
+from poker.tools.helper import COMPUTER_NAME, open_payment_link
 
-if not (platform == "linux" or platform == "linux2"): # pylint: disable=consider-using-in
+if not (platform == "linux" or platform == "linux2"):  # pylint: disable=consider-using-in
     matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import *
 from poker.scraper.table_setup_actions_and_signals import TableSetupActionAndSignals
-from poker.gui.table_setup_form import TableSetupForm
+from poker.gui.gui_launcher import TableSetupForm, GeneticAlgo, SetupForm, StrategyEditorForm, AnalyserForm
 from poker.tools.mongo_manager import MongoManager
 
-from poker.gui.genetic_algorithm_form import *  # pylint: disable=wildcard-import
-from poker.gui.strategy_manager_form import *  # pylint: disable=wildcard-import
-from poker.gui.analyser_form import *  # pylint: disable=wildcard-import
-from poker.gui.setup_form import *  # pylint: disable=wildcard-import
-from poker.gui.help import *  # pylint: disable=wildcard-import
 from poker.tools.vbox_manager import VirtualBoxController
 from PyQt5.QtWidgets import QMessageBox
 import webbrowser
 from poker.decisionmaker.genetic_algorithm import *  # pylint: disable=wildcard-import
 import os
 import logging
-from configobj import ConfigObj
 
 
 # pylint: disable=unnecessary-lambda
@@ -97,6 +91,7 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
             "range_utg3": 100,
             "range_utg4": 100,
             "range_utg5": 100,
+            "range_preflop": 100,
             "PreFlopCallPower": 1,
             "secondRiverBetPotMinEquity": 100,
             "FlopBetPower": 1,
@@ -140,7 +135,9 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
             "FlopMinBetEquity": 100,
             "strategyIterationGames": 1,
             "RiverMinBetEquity": 100,
-            "maxPotAdjustment": 100
+            "maxPotAdjustment": 100,
+            "increased_preflop_betting": 1
+
         }
 
         self.ui = ui_main_window
@@ -148,7 +145,7 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
 
         # Main Window matplotlip widgets
         self.gui_funds = FundsPlotter(ui_main_window, p)
-        self.gui_bar = BarPlotter(ui_main_window, p)
+        self.gui_bar = BarPlotter2(ui_main_window, initialize=True)
         self.gui_curve = CurvePlot(ui_main_window, p)
         self.gui_pie = PiePlotter(ui_main_window, winnerCardTypeList={'Highcard': 22})
 
@@ -191,27 +188,27 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
             lambda: self.signal_update_selected_strategy(p))
         ui_main_window.table_selection.currentIndexChanged[str].connect(
             lambda: self.signal_update_selected_strategy(p))
-        config = ConfigObj(CONFIG_FILENAME)
-        initial_selection = config['last_strategy']
+        config = get_config()
+        initial_selection = config.config.get('main', 'last_strategy')
         idx = 0
         for i in [i for i, x in enumerate(playable_list) if x == initial_selection]:
             idx = i
         ui_main_window.comboBox_current_strategy.setCurrentIndex(idx)
 
-        table_scraper_name = config['table_scraper_name']
+        table_scraper_name = config.config.get('main', 'table_scraper_name')
         idx = available_tables.index(table_scraper_name)
         ui_main_window.table_selection.setCurrentIndex(idx)
 
     def signal_update_selected_strategy(self, p):
-        config = ConfigObj(CONFIG_FILENAME)
+        config = get_config()
 
         newly_selected_strategy = self.ui.comboBox_current_strategy.currentText()
-        config['last_strategy'] = newly_selected_strategy
+        config.config.set('main', 'last_strategy', newly_selected_strategy)
 
         table_selection = self.ui.table_selection.currentText()
-        config['table_scraper_name'] = table_selection
+        config.config.set('main', 'table_scraper_name', table_selection)
 
-        config.write()
+        config.update_file()
         p.read_strategy()
         self.logger.info("Active strategy changed to: " + p.current_strategy)
         self.logger.info("Active table changed to: " + table_selection)
@@ -228,8 +225,7 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
 
     def increase_progressbar(self, value):
         self.progressbar_value += value
-        if self.progressbar_value > 100:
-            self.progressbar_value = 100
+        self.progressbar_value = min(self.progressbar_value, 100)
         self.ui.progress_bar.setValue(self.progressbar_value)
 
     def reset_progressbar(self):
@@ -255,11 +251,11 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         self.ui_analyser = AnalyserForm()
 
         self.gui_fundschange = FundsChangePlot(self.ui_analyser)
-        self.gui_fundschange.drawfigure()
+        self.gui_fundschange.drawfigure(self.ui_analyser.my_computer_only.isChecked())
 
         self.ui_analyser.combobox_actiontype.addItems(
-            ['Fold', 'Check', 'Call', 'Bet', 'BetPlus', 'Bet half pot', 'Bet pot', 'Bet Bluff'])
-        self.ui_analyser.combobox_gamestage.addItems(['PreFlop', 'Flop', 'Turn', 'River'])
+            ['All', 'Fold', 'Check', 'Call', 'Bet', 'BetPlus', 'Bet half pot', 'Bet pot', 'Bet Bluff'])
+        self.ui_analyser.combobox_gamestage.addItems(['All', 'PreFlop', 'Flop', 'Turn', 'River'])
         self.ui_analyser.combobox_strategy.addItems(l.get_played_strategy_list())
 
         index = self.ui_analyser.combobox_strategy.findText(p.current_strategy, QtCore.Qt.MatchFixedString)
@@ -274,19 +270,23 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         self.ui_analyser.combobox_actiontype.currentIndexChanged[str].connect(
             lambda: self.strategy_analyser_update_plots(l, p))
         self.ui_analyser.combobox_strategy.currentIndexChanged[str].connect(lambda: self.update_strategy_analyser(l, p))
+        self.ui_analyser.show_rounds.stateChanged[int].connect(lambda: self.update_strategy_analyser(l, p))
+        self.ui_analyser.my_computer_only.stateChanged[int].connect(lambda: self.update_strategy_analyser(l, p))
 
-        self.gui_bar2 = BarPlotter2(self.ui_analyser, l)
-        self.gui_bar2.drawfigure(l, self.ui_analyser.combobox_strategy.currentText())
+        self.gui_bar2 = BarPlotter2(self.ui_analyser)
+        self.gui_bar2.drawfigure(l,
+                                 self.ui_analyser.combobox_strategy.currentText(),
+                                 self.ui_analyser.combobox_gamestage.currentText(),
+                                 self.ui_analyser.combobox_actiontype.currentText(),
+                                 self.ui_analyser.show_rounds.isChecked(),
+                                 self.ui_analyser.my_computer_only.isChecked())
         self.update_strategy_analyser(l, p)
 
     def open_strategy_editor(self):
         self.p_edited = StrategyHandler()
         self.p_edited.read_strategy()
         self.signal_progressbar_reset.emit()
-        self.stragegy_editor_form = QtWidgets.QWidget()
-        self.ui_editor = StrategyManagerForm()
-        self.ui_editor.setupUi(self.stragegy_editor_form)
-        self.stragegy_editor_form.show()
+        self.ui_editor = StrategyEditorForm()
 
         self.curveplot_preflop = CurvePlot(self.ui_editor, self.p_edited, layout='verticalLayout_preflop')
         self.curveplot_flop = CurvePlot(self.ui_editor, self.p_edited, layout='verticalLayout_flop')
@@ -312,8 +312,8 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
 
         self.playable_list = self.p_edited.get_playable_strategy_list()
         self.ui_editor.Strategy.addItems(self.playable_list)
-        config = ConfigObj(CONFIG_FILENAME)
-        initial_selection = config['last_strategy']
+        config = get_config()
+        initial_selection = config.config.get('main', 'last_strategy')
         idx = 0
         for i in [i for i, x in enumerate(self.playable_list) if x == initial_selection]:
             idx = i
@@ -323,14 +323,8 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         self.ui.button_genetic_algorithm.setEnabled(False)
         g = GeneticAlgorithm(False, l)
         r = g.get_results()
-
-        self.genetic_algorithm_dialog = QtWidgets.QDialog()
-        self.genetic_algorithm_form = GeneticAlgorithmForm()
-        self.genetic_algorithm_form.setupUi(self.genetic_algorithm_dialog)
-        self.genetic_algorithm_dialog.show()
-
+        self.genetic_algorithm_form = GeneticAlgo()
         self.genetic_algorithm_form.textBrowser.setText(str(r))
-        self.genetic_algorithm_dialog.show()
 
         self.genetic_algorithm_form.buttonBox.accepted.connect(lambda: GeneticAlgorithm(True, l))
 
@@ -364,9 +358,9 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         timeouts = ['8', '9', '10', '11', '12']
         self.ui_setup.comboBox_2.addItems(timeouts)
 
-        config = ConfigObj(CONFIG_FILENAME)
+        config = get_config()
         try:
-            mouse_control = config['control']
+            mouse_control = config.config.get('main', 'control')
         except:
             mouse_control = 'Direct mouse control'
         for i in [i for i, x in enumerate(vm_list) if x == mouse_control]:
@@ -374,30 +368,42 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
             self.ui_setup.comboBox_vm.setCurrentIndex(idx)
 
         try:
-            timeout = config['montecarlo_timeout']
+            timeout = config.config.get('main', 'montecarlo_timeout')
         except:
             timeout = 10
         for i in [i for i, x in enumerate(timeouts) if x == timeout]:
             idx = i
             self.ui_setup.comboBox_2.setCurrentIndex(idx)
 
+        login = config.config.get('main', 'login')
+        password = config.config.get('main', 'password')
+        db = config.config.get('main', 'db')
+
+        self.ui_setup.login.setText(login)
+        self.ui_setup.password.setText(password)
+
     def save_setup(self):
-        config = ConfigObj(CONFIG_FILENAME)
-        config['control'] = self.ui_setup.comboBox_vm.currentText()
-        config['montecarlo_timeout'] = self.ui_setup.comboBox_2.currentText()
-        config.write()
+        config = get_config()
+        config.config.set('main', 'control', self.ui_setup.comboBox_vm.currentText())
+        config.config.set('main', 'montecarlo_timeout', self.ui_setup.comboBox_2.currentText())
+        config.config.set('main', 'login', self.ui_setup.login.text())
+        config.config.set('main', 'password', self.ui_setup.password.text())
+        config.update_file()
         self.ui_setup.close()
 
     def update_strategy_analyser(self, l, p):
-        number_of_games = int(l.get_game_count(self.ui_analyser.combobox_strategy.currentText()))
-        total_return = l.get_strategy_return(self.ui_analyser.combobox_strategy.currentText(), 999999)
+        number_of_games = int(l.get_game_count(self.ui_analyser.combobox_strategy.currentText(), self.ui_analyser.my_computer_only.isChecked()))
+        total_return = l.get_strategy_return(self.ui_analyser.combobox_strategy.currentText(), 999999,
+                                             self.ui_analyser.my_computer_only.isChecked())
 
-        winnings_per_bb_100 = total_return / p.selected_strategy['bigBlind'] / number_of_games * 100
+        try:
+            winnings_per_bb_100 = total_return / p.selected_strategy['bigBlind'] / number_of_games * 100
+        except ZeroDivisionError:
+            winnings_per_bb_100 = 0
 
         self.ui_analyser.lcdNumber_2.display(number_of_games)
         self.ui_analyser.lcdNumber.display(winnings_per_bb_100)
-        self.gui_bar2.drawfigure(l, self.ui_analyser.combobox_strategy.currentText())
-        self.gui_fundschange.drawfigure()
+        self.gui_fundschange.drawfigure(self.ui_analyser.my_computer_only.isChecked())
         self.strategy_analyser_update_plots(l, p)
         self.strategy_analyser_update_table(l)
 
@@ -407,20 +413,25 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         decision = str(self.ui_analyser.combobox_actiontype.currentText())
 
         self.gui_histogram.drawfigure(p_name, game_stage, decision, l)
+        self.gui_bar2.drawfigure(l,
+                                 self.ui_analyser.combobox_strategy.currentText(),
+                                 self.ui_analyser.combobox_gamestage.currentText(),
+                                 self.ui_analyser.combobox_actiontype.currentText(),
+                                 self.ui_analyser.show_rounds.isChecked(),
+                                 self.ui_analyser.my_computer_only.isChecked())
 
-        if p_name == '.*':
-            p.read_strategy()
-        else:
-            p.read_strategy(p_name)
+        p.read_strategy(p_name)
 
         call_or_bet = 'Bet' if decision[0] == 'B' else 'Call'
 
         max_value = float(p.selected_strategy['initialFunds'])
+        if game_stage == 'All':
+            game_stage = 'PreFlop'
         min_equity = float(p.selected_strategy[game_stage + 'Min' + call_or_bet + 'Equity'])
         max_equity = float(
             p.selected_strategy['PreFlopMaxBetEquity']) if game_stage == 'PreFlop' and call_or_bet == 'Bet' else 1
         power = float(p.selected_strategy[game_stage + call_or_bet + 'Power'])
-        max_X = .86 if game_stage == "Preflop" else 1
+        max_X = .95 if game_stage == "Preflop" else 1
 
         self.gui_scatterplot.drawfigure(p_name, game_stage, decision, l,
                                         float(p.selected_strategy['smallBlind']),
@@ -434,8 +445,9 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
     def strategy_analyser_update_table(self, l):
         p_name = str(self.ui_analyser.combobox_strategy.currentText())
         df = l.get_worst_games(p_name)
-        model = PandasModel(df)
-        self.ui_analyser.tableView.setModel(model)
+        if not df.empty:
+            model = PandasModel(df)
+            self.ui_analyser.tableView.setModel(model)
 
     def update_strategy_editor_sliders(self, strategy_name):
         self.strategy_handler.read_strategy(strategy_name)
@@ -464,6 +476,8 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
             self.strategy_handler.selected_strategy['opponent_raised_without_initiative_river'])
         self.ui_editor.differentiate_reverse_sheet.setChecked(
             self.strategy_handler.selected_strategy['differentiate_reverse_sheet'])
+        self.ui_editor.range_of_range.setChecked(
+            self.strategy_handler.selected_strategy['range_of_range'])
         self.ui_editor.preflop_override.setChecked(self.strategy_handler.selected_strategy['preflop_override'])
         self.ui_editor.gather_player_names.setChecked(self.strategy_handler.selected_strategy['gather_player_names'])
 
@@ -561,6 +575,7 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
 
         self.strategy_dict['differentiate_reverse_sheet'] = int(self.ui_editor.differentiate_reverse_sheet.isChecked())
         self.strategy_dict['preflop_override'] = int(self.ui_editor.preflop_override.isChecked())
+        self.strategy_dict['range_of_range'] = int(self.ui_editor.range_of_range.isChecked())
         self.strategy_dict['gather_player_names'] = int(self.ui_editor.gather_player_names.isChecked())
 
         self.strategy_dict['collusion'] = int(self.ui_editor.collusion.isChecked())
@@ -580,16 +595,20 @@ class UIActionAndSignals(QObject):  # pylint: disable=undefined-variable
         if (name != "" and name not in self.playable_list) or update:
             strategy_dict = self.update_dictionary(name)
             if update:
-                self.p_edited.update_strategy(strategy_dict)
+                success = self.p_edited.update_strategy(strategy_dict)
             else:
-                self.p_edited.save_strategy(strategy_dict)
+                success = self.p_edited.save_strategy(strategy_dict)
                 self.ui_editor.Strategy.insertItem(0, name)
                 idx = len(self.p_edited.get_playable_strategy_list())
                 self.ui_editor.Strategy.setCurrentIndex(0)
                 self.ui.comboBox_current_strategy.insertItem(0, name)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
-            msg.setText("Saved")
+            if success:
+                msg.setText("Saved")
+            else:
+                msg.setText("To save strategies you need to purchase a subscription")
+                open_payment_link()
             msg.setWindowTitle("Strategy editor")
             msg.setStandardButtons(QMessageBox.Ok)
             retval = msg.exec()
